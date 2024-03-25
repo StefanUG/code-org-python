@@ -1,6 +1,12 @@
 import turtle
 import math
-from enum import Enum
+
+def enum(**enums):
+    """
+      Workaround to the fact that Trinket does not support proper Enums
+    """
+    return type('Enum', (), enums)
+
 
 maze_instance = None
 pegman_instance = None
@@ -29,6 +35,7 @@ class Wall(turtle.Turtle):
 class Path(turtle.Turtle):
   def  __init__(self):
     turtle.Turtle.__init__(self)
+    self.setheading(90)
     self.shape("earth.gif")
     self.color("brown")
     self.penup()
@@ -39,9 +46,6 @@ class Path(turtle.Turtle):
     self.y = y
     self.goto(x, y)
     self.stamp()
-
-
-
 
 class Cell(turtle.Turtle):
   tileType = 0
@@ -55,11 +59,12 @@ class Cell(turtle.Turtle):
 
   def __init__(self, tileType=0, value=0, range=0):
     super().__init__()
-    self.tileType = SquareType(tileType)
+    self.tileType = SquareType.list[tileType]
     self.value = value
     self.originalValue = value
     self.range = range
 
+    self.setheading(90)
     self.penup()
     self.speed(0)
 
@@ -73,13 +78,12 @@ class Cell(turtle.Turtle):
     self.goto(x, y)
 
 
-class SquareType(Enum):
-  WALL = 0
-  OPEN = 1
-  START = 2
-  FINISH = 3
-  OBSTACLE = 4
-  STARTANDFINISH = 5
+
+class _SquareType:
+  value = None
+
+  def __init__(self, value):
+     self.value = value
 
   def isOpen(self):
     return self.value > 0
@@ -89,47 +93,34 @@ class SquareType(Enum):
 
   def isStart(self):
     return self in [SquareType.START, SquareType.STARTANDFINISH]
+  
+SquareType = enum(
+  WALL = _SquareType(0),
+  OPEN = _SquareType(1),
+  START = _SquareType(2),
+  FINISH = _SquareType(3),
+  OBSTACLE = _SquareType(4),
+  STARTANDFINISH = _SquareType(5))
 
-class Direction(Enum):
-  NORTH = 0
-  EAST = 1
-  SOUTH = 2
-  WEST = 3
+SquareType.list = [SquareType.WALL, SquareType.OPEN, SquareType.START, SquareType.FINISH, SquareType.OBSTACLE, SquareType.STARTANDFINISH]
+
+
+Direction = enum(NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3)
+Direction.list = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
 
 
 ###
 ### Harvester Stuff
 ###
-
-class HarvesterFeatureType(Enum):
-  NONE = 0
-  CORN = 1
-  PUMPKIN = 2
-  LETTUCE = 3
+HarvesterFeatureType = enum(NONE = 0, CORN = 1, PUMPKIN = 2, LETTUCE = 3)
 
 
 ###
 ### Bee Stuff
 ###
-
-class BeeFeatureType(Enum):
-  NONE = None
-  HIVE = 0
-  FLOWER = 1
-  VARIABLE = 2
-
-class CloudType(Enum):
-  NONE = None
-  STATIC = 0
-  HIVE_OR_FLOWER = 1
-  FLOWER_OR_NOTHING = 2
-  HIVE_OR_NOTHING = 3
-  ANY = 4
-
-class FlowerColor(Enum):
-  DEFAULT = None
-  RED = 0
-  PURPLE = 1
+BeeFeatureType = enum(NONE = None, HIVE = 0, FLOWER = 1, VARIABLE = 2)
+CloudType = enum(NONE = None, STATIC = 0, HIVE_OR_FLOWER = 1, FLOWER_OR_NOTHING = 2, HIVE_OR_NOTHING = 3, ANY = 4)
+FlowerColor = enum(DEFAULT = None, RED = 0, PURPLE = 1)
 
 class BeeCell(Cell):
   featureType = 0
@@ -138,9 +129,9 @@ class BeeCell(Cell):
 
   def __init__(self,tileType=0, value=0, range=0,featureType=None,flowerColor=None,cloudType=None):
     super().__init__(tileType=tileType, value=value, range=range)
-    self.featureType = BeeFeatureType(featureType)
-    self.flowerColor = FlowerColor(flowerColor)
-    self.cloudType = CloudType(cloudType)
+    self.featureType = featureType
+    self.flowerColor = flowerColor
+    self.cloudType = cloudType
 
   def draw(self, col, row):
     super().draw(col, row)
@@ -181,7 +172,7 @@ class Maze:
     self.screen.bgcolor("white")
     self.screen.setup(410,410)
     self.screen.tracer(0)
-    self.screen.bgpic(f"{level['skin']}_background.png")
+    self.screen.bgpic(level['skin'] + "_background.png")
 
     # register sprites
     bee_shape = ((0,-22),(-4,-20),(-7,-13),(-7.6,-5.6),(-2.6,7.4),(-13.1,-10.5),(-18,-13),(-23,-11),(-25,-6),(-23,-1),(-2.6,7.5),(-7,9),(-6,15),(-4,17),(-7,20),(-11,22),(-7,20),(-4,17),(0,18),(4,17),(7,20),(11,22),(7,20),(4,17),(6,15),(7,9),(2.6,7.5),(23,-1),(25,-6),(23,-11),(18,-13),(13.1,-10.5),(2.6,7.4),(7.6,-5.6),(7,-13),(4,-20))
@@ -250,50 +241,12 @@ class Maze:
     return cell.tileType.isWall()
 
 
-
-  def update(self):
-    for treasure in treasures:
-      if player.is_collision(treasure):
-        player.gold += treasure.gold
-        game["gold_left"] -= 1
-        print(game["gold_left"])
-        treasure.destroy()
-        game["treasures"].remove(treasure)
-        if player.gold == 100:
-          print("lt 100")
-        else:
-          turtle.clear()
-          turtle.goto(-50,300)
-          turtle.write("Player Gold:{}".format(player.gold),align="right",font=(0.0000001))
-          turtle.goto(2000,2000)
-          self.update()
-
-
-
-class Treasure(turtle.Turtle):
-    def __init__(self, x, y):
-        turtle.Turtle.__init__(self)
-        v=self.getscreen()
-        v.register_shape("./image/treasure.gif")
-        self.shape("./image/treasure.gif")
-        self.color("gold")
-        self.penup()
-        self.speed(0)
-        self.gold = 100
-        self.goto(x,y)
-
-    def destroy(self):
-        self.goto(2000, 2000)
-        self.hideturtle()
-
-
-
 class Player():
-  maze:Maze = None
+  maze = None
 
   turtle = turtle.Turtle()
 
-  def __init__(self, maze: Maze ):
+  def __init__(self, maze ):
     self.maze = maze
 
     self.turtle.color("yellow")
@@ -331,9 +284,6 @@ class Player():
   def check(self):
     if (self.maze.isWall(self.gridcoords())):
       self.fail()
-    
-
-
 
   def fail(self):
     self.turtle.undo()
