@@ -192,7 +192,6 @@ class Maze:
     self.screen.register_shape("pile.gif")
     self.screen.register_shape("purple_flower.gif")
     self.screen.register_shape("red_flower.gif")
-    self.screen.register_shape("bee.gif")
     self.screen.register_shape("bee", bee_shape)
 
     if (level['skin'] == 'bee'):
@@ -225,7 +224,6 @@ class Maze:
         cell = self.cellType(**level[y][x])
         row.append(cell)
 
-        # TODO Make the map variable size
         screen_x = -1*((self.width/2)-25) + (x * 50)
         screen_y = (self.height/2-25) - (y * 50)
 
