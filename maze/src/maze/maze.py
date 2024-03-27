@@ -1,9 +1,13 @@
+from enum import Enum
 import turtle
 import math
 import random
 import functools
+import json
+import os
 
 _TRACER_SPEED = 15
+
 
 """
 Global functions to make it easier to code the solutions
@@ -72,7 +76,7 @@ class Path(turtle.Turtle):
   def  __init__(self):
     turtle.Turtle.__init__(self)
     self.setheading(90)
-    self.shape("earth.gif")
+    self.shape(shapefile("earth"))
     self.color("brown")
     self.penup()
     self.speed(0)
@@ -161,8 +165,36 @@ SquareType = enum(
 SquareType.list = [SquareType.WALL, SquareType.OPEN, SquareType.START, SquareType.FINISH, SquareType.OBSTACLE, SquareType.STARTANDFINISH]
 
 
-Direction = enum(NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3)
-Direction.list = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
+class Direction(Enum):
+  NORTH = 0
+  EAST = 1 
+  SOUTH = 2 
+  WEST = 3
+
+  @classmethod
+  def _missing_(cls, value):
+    value = int(value)
+    for member in cls:
+      if member.value == value:
+        return member
+    return None
+
+  def to_heading(self):
+    """
+    Converts the direction of a Maze level to python turtle "standard" mode
+      0 - east      1
+    90 - north     0
+    180 - west      3
+    270 - south     2
+    """
+    if (self == Direction.NORTH):
+      return 90
+    elif (self == Direction.SOUTH):
+      return 270
+    elif (self == Direction.WEST):
+      return 180
+    
+    return 0
 
 
 ###
@@ -206,30 +238,29 @@ class BeeCell(Cell):
       self.hideturtle()
     
     if (self.cloudType != CloudType.NONE):
-      self.shape("cloud.gif")
+      self.shape(shapefile("cloud"))
     elif (self.isFlower()):
       if (self.flowerColor and self.flowerColor > 0):
-        self.shape("purple_flower.gif")
+        self.shape(shapefile("purple_flower"))
       else:
-        self.shape("red_flower.gif")
+        self.shape(shapefile("red_flower"))
       self.drawValue()
     elif (self.isHive()):
-      self.shape("honeycomb.gif")
+      self.shape(shapefile("honeycomb"))
       self.drawValue()
 
   def isCloud(self):
     return self.cloudType != CloudType.NONE
   
-  # CloudType = enum(NONE = None, STATIC = 0, HIVE_OR_FLOWER = 1, FLOWER_OR_NOTHING = 2, HIVE_OR_NOTHING = 3, ANY = 4)
   def reveal(self):
     possibilities = None
     if (self.isCloud()):
       if (self.cloudType == CloudType.HIVE_OR_FLOWER):
         possibilities = [BeeFeatureType.HIVE, BeeFeatureType.FLOWER]
       elif (self.cloudType == CloudType.FLOWER_OR_NOTHING):
-        possibilities = [BeeFeatureType.FLOWER, BeeFeatureType.NONE]
+        possibilities = [BeeFeatureType.FLOWER, BeeFeatureType.FLOWER, BeeFeatureType.NONE]
       elif (self.cloudType == CloudType.HIVE_OR_NOTHING):
-        possibilities = [BeeFeatureType.HIVE, BeeFeatureType.NONE]
+        possibilities = [BeeFeatureType.HIVE, BeeFeatureType.HIVE, BeeFeatureType.NONE]
       elif (self.cloudType == CloudType.ANY):
         possibilities = [BeeFeatureType.NONE, BeeFeatureType.HIVE, BeeFeatureType.FLOWER]
 
@@ -245,13 +276,28 @@ class BeeCell(Cell):
       self.redraw()
 
 
-    
-    
-
-
-
 
 class Maze:
+  @staticmethod
+  def from_file(filename):
+    if (not os.path.exists(filename)):
+      filename = f"{filename}.json"
+    if (not os.path.exists(filename)):
+      filename = f"levels/{filename}"
+    if (not os.path.exists(filename)):
+      checklast = filename
+      filename = f"../{filename}"
+    if (not os.path.exists(filename)):
+      filename = _search_path(checklast, "")
+
+    if (not os.path.exists(filename)):
+      raise TypeError("Unable to find file for level " + filename)
+    
+    with open(filename) as fp:
+      level_json = json.load(fp)
+      return Maze(level_json)
+
+  name = None
   screen = turtle.Screen()
   treasures = []
   walls = []
@@ -261,7 +307,6 @@ class Maze:
   width = 0
   height = 0
   
-  currentStaticGrid = None
   cellType = Cell
 
   grid = []
@@ -273,36 +318,44 @@ class Maze:
 
   def __init__(self, level):
     Maze.instance = self
+
+    levelProps = level['properties']
+
     self.screen.bgcolor("white")
     self.screen.setup(410,410)
     self.screen.tracer(0)
-    self.screen.bgpic(level['skin'] + "_background.png")
+    self.screen.bgpic(shapefile(levelProps['skin'] + "_background", ".png"))
 
     # register sprites
-    bee_shape = ((0,-22),(-4,-20),(-7,-13),(-7.6,-5.6),(-2.6,7.4),(-13.1,-10.5),(-18,-13),(-23,-11),(-25,-6),(-23,-1),(-2.6,7.5),(-7,9),(-6,15),(-4,17),(-7,20),(-11,22),(-7,20),(-4,17),(0,18),(4,17),(7,20),(11,22),(7,20),(4,17),(6,15),(7,9),(2.6,7.5),(23,-1),(25,-6),(23,-11),(18,-13),(13.1,-10.5),(2.6,7.4),(7.6,-5.6),(7,-13),(4,-20))
+    bee_shape = ((0,-22),(-4,-20),(-7,-13),(7,-13),(-7,-13),(-7.6,-5.6),(7.6,-5.6),(-7.6,-5.6),(-2.6,7.4),(-13.1,-10.5),(-18,-13),(-23,-11),(-25,-6),(-23,-1),(-2.6,7.5),(-7,9),(-6,15),(-4,17),(-7,20),(-11,22),(-7,20),(-4,17),(0,18),(4,17),(7,20),(11,22),(7,20),(4,17),(6,15),(7,9),(2.6,7.5),(23,-1),(25,-6),(23,-11),(18,-13),(13.1,-10.5),(2.6,7.4),(7.6,-5.6),(7,-13),(4,-20))
 
-    self.screen.register_shape("cloud.gif")
-    self.screen.register_shape("earth.gif")
-    self.screen.register_shape("hole.gif")
-    self.screen.register_shape("pile.gif")
-    self.screen.register_shape("purple_flower.gif")
-    self.screen.register_shape("red_flower.gif")
-    self.screen.register_shape("honeycomb.gif")
+    self.screen.register_shape(shapefile("cloud"))
+    self.screen.register_shape(shapefile("earth"))
+    self.screen.register_shape(shapefile("hole"))
+    self.screen.register_shape(shapefile("pile"))
+    self.screen.register_shape(shapefile("purple_flower"))
+    self.screen.register_shape(shapefile("red_flower"))
+    self.screen.register_shape(shapefile("honeycomb"))
     self.screen.register_shape("bee", bee_shape)
 
-    if (level['skin'] == 'bee'):
+    if (levelProps['skin'] == 'bee'):
       self.cellType = BeeCell
       self.path = Path()
 
-    self.currentStaticGrid = level
-
-    self.setup_maze(level["serialized_maze"])
+    self.setup_maze(level)
 
     self.pen.tick()
 
   def setup_maze(self, level):
+    levelProps = level['properties']
+    parsed_maze = level.get('parsed_maze')
+    if (not parsed_maze):
+      parsed_maze = json.loads(levelProps["serialized_maze"])
+      level['parsed_maze'] = parsed_maze
+
+    maze = level['parsed_maze']
     startCell = None
-    rows = len(level)
+    rows = len(maze)
     self.height = rows * 50
     self.grid = []
     self.pen = Pen()
@@ -310,12 +363,12 @@ class Maze:
     for y in range(rows):
       row = []
       self.grid.append(row)
-      cols = len(level[y])
+      cols = len(maze[y])
       for x in range(cols):
         if (self.width == 0):
           self.width = cols * 50
 
-        cell = self.cellType(**level[y][x])
+        cell = self.cellType(**maze[y][x])
         row.append(cell)
 
         screen_x = -1*((self.width/2)-25) + (x * 50)
@@ -336,9 +389,13 @@ class Maze:
 
     Cell.sort_list(self.openCells)
 
-
     self.player = Player(self)
     self.player.turtle.goto(startCell.x, startCell.y)
+
+    dir = levelProps.get("start_direction")
+    if (dir):
+      dir = Direction(dir)
+      self.player.turtle.setheading(dir.to_heading())
 
     self.update()
 
@@ -349,17 +406,22 @@ class Maze:
       self.visited.append(cell)
       Cell.sort_list(self.visited)
       
+    self.getCell((coords[0], coords[1])).reveal()
     if (coords[1] > 0): # reveal above
       self.getCell((coords[0], coords[1]-1)).reveal()
     if (coords[0] > 0): # reveal left
       self.getCell((coords[0]-1, coords[0])).reveal()
-    if (coords[1] < len(self.grid)): # reveal below
+    if (coords[1] < len(self.grid)-1): # reveal below
       self.getCell((coords[0], coords[1]+1)).reveal()
-    if (coords[0] < len(self.grid[coords[1]])): # reveal right
+    if (coords[0] < len(self.grid[coords[1]])-1): # reveal right
       self.getCell((coords[0]+1, coords[1])).reveal()
 
 
     self.pen.tick()
+
+
+    
+
 
 
   def done(self):
@@ -480,4 +542,25 @@ class Player():
   def make_honey(self):
     self.process(lambda cell: cell.isHive())
 
+
+
+
+def _search_path(filename, ext):
+  if (not os.path.exists(filename)):
+    filename = f"{filename}{ext}"
+  if (not os.path.exists(filename)):
+    filename = f"maze/{filename}"
+  if (not os.path.exists(filename)):
+    filename = f"src/{filename}"
+  if (not os.path.exists(filename)):
+    filename = f"maze/{filename}"
+  if (not os.path.exists(filename)):
+    filename = f"../{filename}"
+  if (not os.path.exists(filename)):
+    raise TypeError("Unable to shape file for " + filename)
+  
+  return filename
+
+def shapefile(name, ext=".gif"):
+  return _search_path(name, ext)
 

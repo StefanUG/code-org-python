@@ -1,0 +1,240 @@
+import xml.etree.ElementTree as ET
+import json
+import argparse
+import os
+import re
+
+parser = argparse.ArgumentParser(
+            prog='Course importer/converter',
+            description='Import a course file from code-dot-org and create empty puzzle files',
+            epilog='example: \ncreate_course -s ../code-dot-org -t course/ coursed-2023')
+
+parser.add_argument('-s', '--source-dir',
+                    help='The root folder for code-dot-org codebase, to look for courses within')
+
+parser.add_argument('-t', '--target_dir', default="course/", required=False,
+                    help='Target directory to store the output files')
+
+parser.add_argument('coursename',
+                    help='The name of the course to import and convert')
+
+args = parser.parse_args()
+
+
+def sanitize_filename(filename):
+  return re.sub(r'[\\/*?:\"<>|]', "", filename) #.replace(" ", "_")
+
+
+# Defines the folders to look through
+# TODO Support "turtle" and "flappy"
+SUPPORTED_LEVEL_TYPES = [
+    ["levels/custom/maze"            , "level"],
+    ["levels/custom/unplug"          , "level"],
+    ["levels/customstandalone_video" , "level"],
+    ["scripts"                       , "external"]
+  ]
+
+
+def find_level_file(levelname, ext, startdir="."):
+  dir_prefix = "/dashboard/config"
+  levelfile = f"{levelname}"
+  
+  for leveltype in SUPPORTED_LEVEL_TYPES:
+    filename = f"{startdir}{dir_prefix}/{leveltype[0]}/{levelfile}.{levelfile[1]}"
+    if (os.path.exists(filename)):
+      return filename
+    
+  return None
+
+
+def find_course_file(coursename):
+  return f"dashboard/config/scripts_json/{coursename}.script_json"
+
+#
+# Structure of the code-dot-org course script is:
+# - lesson_groups, e.g. High level "Loops" or "Conditionals"
+# - lessons, e.g. "Nested Loops in Maze"
+# - lesson_activities, e.g. "Warm up", "Main Activity", "Wrap Up"
+# - activity_sections, e.g. "Skill Building", "Prediction"
+# - script_levels, e.g. each level in skill building
+
+
+#
+#
+# An lesson_activity looks like this, and is not needed to generate the puzzle files
+#
+#   "key": "8fe0f456-c4bd-4d50-bee3-fa311f5cc147",
+#   "position": 1,
+#   "properties": {
+#     "duration": 10,
+#     "name": "Warm Up"
+#   },
+#   "seeding_key": {
+#     "lesson_activity.key": "8fe0f456-c4bd-4d50-bee3-fa311f5cc147",
+#     "lesson.key": "Nested Loops in Maze",
+#     "lesson_group.key": "csf_loops",
+#     "script.name": "coursed-2023"
+#   }
+#
+#
+# An activity_section looks like this:
+#  {
+#    "key": "b9ae7539-4e07-42a1-a318-77b57bcebe7f",
+#    "position": 1,
+#    "properties": {
+#      "description": "These puzzles might sprout some questions, so have the students work in pairs or implement the \"Ask three before you ask me\" rule (have the students ask three other peers for help before they go to the teacher.) This will spark discussions that will develop each student's understanding.",
+#      "name": "If/Else with Bee"
+#    },
+#    "seeding_key": {
+#      "activity_section.key": "b9ae7539-4e07-42a1-a318-77b57bcebe7f",
+#      "lesson_activity.key": "293c782d-3e53-4092-bea7-c4ed864214b0"
+#    }
+#  },
+
+
+# course file e.g. 
+# code-dot-org/dashboard/config/scripts_json/coursed-2023.script_json
+# code-dot-org/dashboard/config/levels/custom/maze/courseD_bee_conditionals3_2023.level
+
+
+def generate_courses(coursename):
+  coursefile = find_course_file(coursename)
+  try:
+    with open(coursefile) as f:
+      course = json.load(f)
+
+      lesson_group_seq = 0
+
+      # A lesson_group looks like this:
+      #
+      #   "key": "csf_conditionals",
+      #   "user_facing": true,
+      #   "position": 5,
+      #   "properties": {
+      #     "display_name": "Conditionals"
+      #   },
+      #   "seeding_key": {
+      #     "lesson_group.key": "csf_conditionals",
+      #     "script.name": "coursed-2023"
+      #   }      
+      for lesson_group in course.get("lesson_groups"):
+        lesson_group_seq += 1
+
+        # Get relevant properties from lesson_group
+        group_name = lesson_group["properties"]["display_name"]
+        lesson_group_key = lesson_group["key"]
+
+        # Directory name for Group
+
+        # A lesson looks like this:
+        # 
+        #   "key": "If/Else with Bee",
+        #   "name": "If/Else with Bee",
+        #   "absolute_position": 14,
+        #   "lockable": false,
+        #   "has_lesson_plan": true,
+        #   "relative_position": 14,
+        #   "properties": {
+        #     "creative_commons_license": "Creative Commons BY-NC-SA",
+        #     "overview": "In this **skill-building** lesson, your class will continue to code with conditionals, allowing them to write code that functions differently depending on the specific conditions the program encounters.",
+        #     "preparation": " - Play through the puzzles to find any potential problem areas for your class.\n",
+        #     "purpose": "After being introduced to conditionals in \"Conditionals with Cards,\" students will now practice using them in their programs. The \"if / else\" blocks will allow for a more flexible program. The bee will only collect nectar *if* there is a flower or make honey *if* there is a honeycomb. ",
+        #     "student_overview": "Now that you understand conditionals, it's time to program Bee to use them when collecting honey and nectar. ",
+        #     ["unplugged": true] # Only present when unplugged
+        #   },
+        #   "seeding_key": {
+        #     "lesson.key": "If/Else with Bee",
+        #     "lesson_group.key": "csf_conditionals",
+        #     "script.name": "coursed-2023"
+        #   }
+        for lesson in course.get("lessons"):
+          if (lesson["seeding_key"]["lesson_group.key"] == lesson_group_key):
+
+            props = lesson["properties"]
+
+            cc_license = props.get("creative_commons_license")
+            lesson_seq = lesson["absolute_position"]
+            lesson_key = lesson["key"]
+            lesson_unplugged = bool(props["unplugged"])
+
+            # Only continue if the lesson is under Creative Commons license
+            if (cc_license):
+              lesson_name = lesson["name"]
+              
+              # Directory name for the lesson
+              course_dirname = f"{args.target_dir}/{lesson_group['seeding_key']['script.name']}"
+              lesson_dirname = sanitize_filename(f"{lesson_seq} - {group_name} - {lesson_key}")
+              lesson_dirname = f"{course_dirname}/{lesson_dirname}"
+              os.makedirs(lesson_dirname)
+
+              # TODO Make Lesson MD file for the lesson
+
+
+              # A script_level looks like this:
+              #
+              #  "chapter": 120,
+              #  "position": 4,
+              #  "activity_section_position": 2,
+              #  "assessment": false,
+              #  "properties": {
+              #    "level_keys": [
+              #      "courseD_bee_conditionals3_2023"
+              #    ],
+              #    "progression": "Skill Building"
+              #  },
+              #  "bonus": false,
+              #  "seeding_key": {
+              #    "script_level.level_keys": [
+              #      "courseD_bee_conditionals3_2023"
+              #    ],
+              #    "lesson.key": "If/Else with Bee",
+              #    "lesson_group.key": "csf_conditionals",
+              #    "script.name": "coursed-2023",
+              #    "activity_section.key": "c3e5d3a5-f776-4bd6-93d6-821025f2c40f"
+              #  },
+              #  "level_keys": [
+              #    "courseD_bee_conditionals3_2023"
+              #  ]
+              for level in course.get("lesson_activities"):
+                props = level["properties"]
+                level_key = level["level_keys"][0] # TODO, check if there could ever be more
+                level_seq = level["position"]
+                level_progression = props["progression"]
+                section_pos = level["activity_section_position"]
+
+                if (lesson_key == level["seeding_key"]["lesson.key"]):
+                  print()
+                  level_dirname = f"{lesson_dirname}/{level_seq} - {level_progression} {section_pos}"
+                  os.makedirs(level_dirname)
+
+                  find_level_file(level_key)
+
+                  # TODO Make a puzzle.py file for this level
+
+
+            else:
+              print(f"Skipping lesson '{lesson_name}' as it does not have a creative_commons_license")
+
+
+        filename = f"{dirname}/"
+
+    # Find the 'config' node and extract the JSON data
+    config_node = root.find('config')
+    json_data = config_node.text
+
+    # Load the JSON data as a Python dictionary
+    data = json.loads(json_data)
+    data["parsed_maze"] = json.loads(data["properties"]["serialized_maze"])
+
+    filename = os.path.basename(levelfile)
+    filename = os.path.splitext(filename)[0]
+    filename = f"{args.target_dir}/{filename}.json"
+
+    # Save the Python dictionary as a JSON file
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=2)
+
+    print(f"Saved level to '{filename}'")
+  except (AttributeError,KeyError) as err:
+    print(f"Error with file: {levelfile}.", err)
+
