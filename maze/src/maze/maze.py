@@ -550,6 +550,8 @@ class Player():
     self.turtle.color("black", "orange")
     cell = self._getCurrentCell()
     if (cond(cell)):
+      if (cell.value <= 0):
+        self._fail()
       cell.value -= 1
       cell.redraw()
     else:
