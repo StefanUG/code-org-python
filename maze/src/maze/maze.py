@@ -76,7 +76,7 @@ class Path(turtle.Turtle):
   def  __init__(self):
     turtle.Turtle.__init__(self)
     self.setheading(90)
-    self.shape(shapefile("earth"))
+    self.shape(_shapefile("earth"))
     self.color("brown")
     self.penup()
     self.speed(0)
@@ -119,12 +119,21 @@ class Cell(turtle.Turtle):
     self.goto(x, y)
 
   def drawValue(self):
-    self.getscreen().tracer(0)
+    delay = self.getscreen().delay()
+    if (delay):
+      self.getscreen().tracer(0,0)
     self.clear()
     self.setpos(self.x+20, self.y-20)
     self.write(self.value, False, align="right", font=("Arial", "18", "bold"))
     self.setpos(self.x, self.y)
-    self.getscreen().tracer(1,_TRACER_SPEED)
+    if (delay):
+      self.getscreen().tracer(1,delay)
+
+  def needs_visit(self):
+    return self.tileType.isOpen()
+
+  def isOpen(self):
+    return self.tileType.isOpen()
 
   @staticmethod
   def sort_list(list):
@@ -223,6 +232,8 @@ class BeeCell(Cell):
 
   def draw(self, x, y):
     super().draw(x, y)
+    if (not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
+      self.value = 0
     self.redraw()
 
   def isFlower(self):
@@ -232,25 +243,28 @@ class BeeCell(Cell):
     return self.featureType == BeeFeatureType.HIVE
 
   def redraw(self):
-    if (self.featureType != BeeFeatureType.NONE):
+    if (self.featureType not in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
       self.showturtle()
     else:
       self.hideturtle()
     
     if (self.cloudType != CloudType.NONE):
-      self.shape(shapefile("cloud"))
+      self.shape(_shapefile("cloud"))
     elif (self.isFlower()):
       if (self.flowerColor and self.flowerColor > 0):
-        self.shape(shapefile("purple_flower"))
+        self.shape(_shapefile("purple_flower"))
       else:
-        self.shape(shapefile("red_flower"))
+        self.shape(_shapefile("red_flower"))
       self.drawValue()
     elif (self.isHive()):
-      self.shape(shapefile("honeycomb"))
+      self.shape(_shapefile("honeycomb"))
       self.drawValue()
 
   def isCloud(self):
     return self.cloudType != CloudType.NONE
+  
+  def needs_visit(self):
+    return self.isCloud() or self.isFlower() or self.isHive()
   
   def reveal(self):
     possibilities = None
@@ -271,6 +285,8 @@ class BeeCell(Cell):
         # When there is no feature type, set the value to 0 so that 
         # we can detect the win condition properly
         self.value = 0
+      elif self.value == 0:
+        self.value = 1
 
       self.cloudType = CloudType.NONE
       self.redraw()
@@ -311,7 +327,7 @@ class Maze:
 
   grid = []
 
-  openCells = []
+  cells_to_visit = []
   visited = []
 
   pen = None
@@ -323,19 +339,19 @@ class Maze:
 
     self.screen.bgcolor("white")
     self.screen.setup(410,410)
-    self.screen.tracer(0)
-    self.screen.bgpic(shapefile(levelProps['skin'] + "_background", ".png"))
+    self.screen.tracer(0,0)
+    self.screen.bgpic(_shapefile(levelProps['skin'] + "_background", ".png"))
 
     # register sprites
     bee_shape = ((0,-22),(-4,-20),(-7,-13),(7,-13),(-7,-13),(-7.6,-5.6),(7.6,-5.6),(-7.6,-5.6),(-2.6,7.4),(-13.1,-10.5),(-18,-13),(-23,-11),(-25,-6),(-23,-1),(-2.6,7.5),(-7,9),(-6,15),(-4,17),(-7,20),(-11,22),(-7,20),(-4,17),(0,18),(4,17),(7,20),(11,22),(7,20),(4,17),(6,15),(7,9),(2.6,7.5),(23,-1),(25,-6),(23,-11),(18,-13),(13.1,-10.5),(2.6,7.4),(7.6,-5.6),(7,-13),(4,-20))
 
-    self.screen.register_shape(shapefile("cloud"))
-    self.screen.register_shape(shapefile("earth"))
-    self.screen.register_shape(shapefile("hole"))
-    self.screen.register_shape(shapefile("pile"))
-    self.screen.register_shape(shapefile("purple_flower"))
-    self.screen.register_shape(shapefile("red_flower"))
-    self.screen.register_shape(shapefile("honeycomb"))
+    self.screen.register_shape(_shapefile("cloud"))
+    self.screen.register_shape(_shapefile("earth"))
+    self.screen.register_shape(_shapefile("hole"))
+    self.screen.register_shape(_shapefile("pile"))
+    self.screen.register_shape(_shapefile("purple_flower"))
+    self.screen.register_shape(_shapefile("red_flower"))
+    self.screen.register_shape(_shapefile("honeycomb"))
     self.screen.register_shape("bee", bee_shape)
 
     if (levelProps['skin'] == 'bee'):
@@ -375,9 +391,10 @@ class Maze:
         screen_y = (self.height/2-25) - (y * 50)
 
         if (cell.tileType.isOpen()):
-          self.openCells.append(cell)
           if (self.path):
             self.path.draw(screen_x, screen_y)
+          if (cell.needs_visit()):
+            self.cells_to_visit.append(cell)
         
         cell.draw(screen_x, screen_y)
 
@@ -387,7 +404,7 @@ class Maze:
         if (cell.tileType.isStart()):
           startCell = cell
 
-    Cell.sort_list(self.openCells)
+    Cell.sort_list(self.cells_to_visit)
 
     self.player = Player(self)
     self.player.turtle.goto(startCell.x, startCell.y)
@@ -420,25 +437,30 @@ class Maze:
     self.pen.tick()
 
 
-    
-
-
-
   def done(self):
     if (self.detectWinScenario()):
-      self.player.success()
+      self.player._success()
     else:
-      self.player.fail(False)
+      self.player._fail(False)
   
   def detectWinScenario(self):
-    if (self.visited == self.openCells):
-      value = functools.reduce(lambda v, cell: v + cell.value, self.visited, 0)
+    if (all(element in self.visited for element in self.cells_to_visit)):
+      value = self.get_cell_values()
       return value == 0
     return False
+  
+  def get_cell_values(self):
+      return functools.reduce(lambda v, cell: v + cell.value, self.visited, 0)
+
 
 
   def getCell(self, gridcoords):
-    return self.grid[gridcoords[1]][gridcoords[0]]
+    row = None
+    if (len(self.grid) > gridcoords[1] and gridcoords[1] >= 0):
+      row = self.grid[gridcoords[1]]
+    if (row is not None and len(row) > gridcoords[0] and gridcoords[0] >= 0):
+      return row[gridcoords[0]]
+    return None
 
   def isWall(self, gridcoords):
     cell = self.getCell(gridcoords)
@@ -446,7 +468,7 @@ class Maze:
 
 
 class Player():
-  maze = None
+  maze:Maze = None
 
   turtle = turtle.Turtle()
 
@@ -488,20 +510,20 @@ class Player():
     return self.maze.getCell(self.gridcoords())
 
 
-  def check(self):
+  def _check(self):
     if (self.maze.isWall(self.gridcoords())):
-      self.fail()
+      self._fail()
 
     self.maze.update()
 
-  def fail(self, undo=True):
+  def _fail(self, undo=True):
     if (undo):
       self.turtle.undo()
     self.turtle.color("black","red")
     self.maze.pen.draw_failure()
     self.turtle.getscreen().mainloop()
 
-  def success(self):
+  def _success(self):
     self.maze.pen.draw_success()
     self.turtle.speed(8)
     self.turtle.right(360)
@@ -509,8 +531,21 @@ class Player():
     self.turtle.getscreen().mainloop()
 
   def go_forward(self, steps=1):
-    self.turtle.forward(steps * 50)
-    self.check()
+    for i in range(steps):
+      self.turtle.forward(50)
+      self._check()
+
+  def _process(self, cond):
+    color = self.turtle.color()
+    self.turtle.color("black", "orange")
+    cell = self.getCurrentCell()
+    if (cond(cell)):
+      cell.value -= 1
+      cell.redraw()
+    else:
+      self._fail()
+
+    self.turtle.color(color[0], color[1])
 
   def right(self):
     self.turtle.right(90)
@@ -524,23 +559,26 @@ class Player():
   def at_honeycomb(self):
     return self.getCurrentCell().isHive()
 
-  def process(self, cond):
-    color = self.turtle.color()
-    self.turtle.color("black", "orange")
-    cell = self.getCurrentCell()
-    if (cond(cell)):
-      cell.value -= 1
-      cell.redraw()
-    else:
-      self.fail()
-
-    self.turtle.color(color[0], color[1])
+  def path_ahead(self):
+    coords = self.gridcoords()
+    head = self.turtle.heading()
+    cell = None
+    if (head == Direction.NORTH.to_heading()):
+      cell = self.maze.getCell((coords[0], coords[1]-1))
+    elif (head == Direction.EAST.to_heading()):
+      cell = self.maze.getCell((coords[0]+1, coords[1]))
+    elif (head == Direction.SOUTH.to_heading()):
+      cell = self.maze.getCell((coords[0], coords[1]+1))
+    elif (head == Direction.WEST.to_heading()):
+      cell = self.maze.getCell((coords[0]-1, coords[1]))
+    
+    return cell is not None and cell.isOpen()
 
   def get_nectar(self):
-    self.process(lambda cell: cell.isFlower())
+    self._process(lambda cell: cell.isFlower())
 
   def make_honey(self):
-    self.process(lambda cell: cell.isHive())
+    self._process(lambda cell: cell.isHive())
 
 
 
@@ -561,6 +599,6 @@ def _search_path(filename, ext):
   
   return filename
 
-def shapefile(name, ext=".gif"):
+def _shapefile(name, ext=".gif"):
   return _search_path(name, ext)
 
