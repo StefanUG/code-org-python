@@ -243,7 +243,7 @@ class BeeCell(Cell):
     return self.featureType == BeeFeatureType.HIVE
 
   def redraw(self):
-    if (self.featureType not in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
+    if (self.isCloud() or self.featureType not in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
       self.showturtle()
     else:
       self.hideturtle()
@@ -506,7 +506,7 @@ class Player():
     row = round((self.maze.height/2 - (self.turtle.ycor()+25) ) / 50)
     return (col, row)
   
-  def getCurrentCell(self):
+  def _getCurrentCell(self) -> Cell:
     return self.maze.getCell(self.gridcoords())
 
 
@@ -530,15 +530,10 @@ class Player():
     self.turtle.left(360)
     self.turtle.getscreen().mainloop()
 
-  def go_forward(self, steps=1):
-    for i in range(steps):
-      self.turtle.forward(50)
-      self._check()
-
   def _process(self, cond):
     color = self.turtle.color()
     self.turtle.color("black", "orange")
-    cell = self.getCurrentCell()
+    cell = self._getCurrentCell()
     if (cond(cell)):
       cell.value -= 1
       cell.redraw()
@@ -547,6 +542,21 @@ class Player():
 
     self.turtle.color(color[0], color[1])
 
+  def _get_value_if(self, cellCond):
+    cell = self._getCurrentCell()
+    value = 0
+    if (cellCond(cell)):
+      value = cell.value
+    return value
+    
+  def forward(self, steps=1):
+    for i in range(steps):
+      self.turtle.forward(50)
+      self._check()
+
+  move_forward = forward
+  go_forward = forward
+
   def right(self):
     self.turtle.right(90)
 
@@ -554,10 +564,16 @@ class Player():
     self.turtle.left(90)
 
   def at_flower(self):
-    return self.getCurrentCell().isFlower()
+    return self._getCurrentCell().isFlower()
 
   def at_honeycomb(self):
-    return self.getCurrentCell().isHive()
+    return self._getCurrentCell().isHive()
+  
+  def nectar(self):
+    return self._get_value_if(lambda cell: cell.isFlower())
+
+  def honey(self):
+    return self._get_value_if(lambda cell: cell.isHive())
 
   def path_ahead(self):
     coords = self.gridcoords()
