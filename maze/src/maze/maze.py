@@ -6,8 +6,10 @@ import functools
 import json
 import os
 
-_TRACER_SPEED = 15
+_TESTMODE = os.environ.get('TESTMODE')
 
+_TRACER_DELAY = 0 if _TESTMODE == "True" else 15
+_TRACER_N     = 0 if _TESTMODE == "True" else 1
 
 """
 Global functions to make it easier to code the solutions
@@ -56,11 +58,11 @@ class Pen(turtle.Turtle):
     
 
   def tick(self):
-    self.getscreen().tracer(1,50)
+    self.getscreen().tracer(_TRACER_N,50)
     self.left(1)
     self.right(2)
     self.left(1)
-    self.getscreen().tracer(1,_TRACER_SPEED)
+    self.getscreen().tracer(_TRACER_N,_TRACER_DELAY)
 
     
 
@@ -127,7 +129,7 @@ class Cell(turtle.Turtle):
     self.write(self.value, False, align="right", font=("Arial", "18", "bold"))
     self.setpos(self.x, self.y)
     if (delay):
-      self.getscreen().tracer(1,delay)
+      self.getscreen().tracer(_TRACER_N,delay)
 
   def needs_visit(self):
     return self.tileType.isOpen()
@@ -313,6 +315,14 @@ class Maze:
       level_json = json.load(fp)
       return Maze(level_json)
 
+  @staticmethod
+  def _testmode():
+    global _TRACER_DELAY
+    global _TRACER_N
+    _TRACER_DELAY = 0
+    _TRACER_N = 0
+
+
   name = None
   screen = turtle.Screen()
   treasures = []
@@ -358,11 +368,12 @@ class Maze:
       self.cellType = BeeCell
       self.path = Path()
 
-    self.setup_maze(level)
+    self._setup_maze(level)
 
     self.pen.tick()
+  
 
-  def setup_maze(self, level):
+  def _setup_maze(self, level):
     levelProps = level['properties']
     parsed_maze = level.get('parsed_maze')
     if (not parsed_maze):
@@ -402,12 +413,12 @@ class Maze:
           self.walls.append((x, y))
 
         if (cell.tileType.isStart()):
-          startCell = cell
+          self.startCell = cell
 
     Cell.sort_list(self.cells_to_visit)
 
     self.player = Player(self)
-    self.player.turtle.goto(startCell.x, startCell.y)
+    self.player.turtle.goto(self.startCell.x, self.startCell.y)
 
     dir = levelProps.get("start_direction")
     if (dir):
@@ -517,18 +528,22 @@ class Player():
     self.maze.update()
 
   def _fail(self, undo=True):
-    if (undo):
-      self.turtle.undo()
-    self.turtle.color("black","red")
-    self.maze.pen.draw_failure()
-    self.turtle.getscreen().mainloop()
+    print("fail")
+    if (_TRACER_N > 0):
+      if (undo):
+        self.turtle.undo()
+      self.turtle.color("black","red")
+      self.maze.pen.draw_failure()
+      self.turtle.getscreen().mainloop()
 
   def _success(self):
-    self.maze.pen.draw_success()
-    self.turtle.speed(8)
-    self.turtle.right(360)
-    self.turtle.left(360)
-    self.turtle.getscreen().mainloop()
+    print("success")
+    if (_TRACER_N > 0):
+      self.maze.pen.draw_success()
+      self.turtle.speed(8)
+      self.turtle.right(360)
+      self.turtle.left(360)
+      self.turtle.getscreen().mainloop()
 
   def _process(self, cond):
     color = self.turtle.color()
@@ -598,18 +613,25 @@ class Player():
 
 
 
+# Get the directory of the current Python file
+_dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def _search_path(filename, ext):
   if (not os.path.exists(filename)):
     filename = f"{filename}{ext}"
+  
+  othername = os.path.join(_dir_path, filename)
+  if (os.path.exists(othername)):
+    return othername
+  
   if (not os.path.exists(filename)):
-    filename = f"maze/{filename}"
+    filename = os.path.join("maze", filename)
   if (not os.path.exists(filename)):
-    filename = f"src/{filename}"
+    filename = os.path.join("src", filename)
   if (not os.path.exists(filename)):
-    filename = f"maze/{filename}"
+    filename = os.path.join("maze", filename)
   if (not os.path.exists(filename)):
-    filename = f"../{filename}"
+    filename = os.path.join("..", filename)
   if (not os.path.exists(filename)):
     raise TypeError("Unable to shape file for " + filename)
   
