@@ -102,6 +102,7 @@ def generate_courses(coursename, source_dir, target_dir):
   coursefile = find_course_file(coursename, source_dir)
   with open(coursefile) as f:
     course = json.load(f)
+    course['key'] = coursename
 
     lesson_group_seq = 0
 
