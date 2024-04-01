@@ -5,6 +5,7 @@ import random
 import functools
 import json
 import os
+import sys
 
 _TESTMODE = os.environ.get('TESTMODE')
 
@@ -101,7 +102,7 @@ class Cell(turtle.Turtle):
 
   def __init__(self, tileType=0, value=0, range=0):
     super().__init__()
-    self.tileType = SquareType.list[tileType]
+    self.tileType = SquareType(tileType)
     self.value = value
     self.originalValue = value
     self.range = range
@@ -142,18 +143,13 @@ class Cell(turtle.Turtle):
     list.sort(key=lambda cell: (cell.x, cell.y))
 
 
-def enum(**enums):
-    """
-      Workaround to the fact that Trinket does not support proper Enums
-    """
-    return type('Enum', (), enums)
-
-
-class _SquareType:
-  value = None
-
-  def __init__(self, value):
-     self.value = value
+class SquareType(Enum):
+  WALL = 0
+  OPEN = 1
+  START = 2
+  FINISH = 3
+  OBSTACLE = 4
+  STARTANDFINISH = 5
 
   def isOpen(self):
     return self.value > 0
@@ -163,17 +159,6 @@ class _SquareType:
 
   def isStart(self):
     return self in [SquareType.START, SquareType.STARTANDFINISH]
-
-
-SquareType = enum(
-  WALL = _SquareType(0),
-  OPEN = _SquareType(1),
-  START = _SquareType(2),
-  FINISH = _SquareType(3),
-  OBSTACLE = _SquareType(4),
-  STARTANDFINISH = _SquareType(5))
-
-SquareType.list = [SquareType.WALL, SquareType.OPEN, SquareType.START, SquareType.FINISH, SquareType.OBSTACLE, SquareType.STARTANDFINISH]
 
 
 class Direction(Enum):
@@ -211,15 +196,34 @@ class Direction(Enum):
 ###
 ### Harvester Stuff
 ###
-HarvesterFeatureType = enum(NONE = 0, CORN = 1, PUMPKIN = 2, LETTUCE = 3)
+class HarvesterFeatureType(Enum):
+  NONE = 0
+  CORN = 1
+  PUMPKIN = 2
+  LETTUCE = 3
 
 
 ###
 ### Bee Stuff
 ###
-BeeFeatureType = enum(NONE = None, HIVE = 0, FLOWER = 1, VARIABLE = 2)
-CloudType = enum(NONE = None, STATIC = 0, HIVE_OR_FLOWER = 1, FLOWER_OR_NOTHING = 2, HIVE_OR_NOTHING = 3, ANY = 4)
-FlowerColor = enum(DEFAULT = None, RED = 0, PURPLE = 1)
+class BeeFeatureType(Enum):
+  NONE = None
+  HIVE = 0
+  FLOWER = 1
+  VARIABLE = 2
+
+class CloudType(Enum):
+  NONE = None
+  STATIC = 0 
+  HIVE_OR_FLOWER = 1
+  FLOWER_OR_NOTHING = 2
+  HIVE_OR_NOTHING = 3
+  ANY = 4
+
+class FlowerColor(Enum):
+  DEFAULT = None
+  RED = 0
+  PURPLE = 1
 
 class BeeCell(Cell):
   featureType = 0
@@ -228,9 +232,9 @@ class BeeCell(Cell):
 
   def __init__(self,tileType=0, value=0, range=0,featureType=None,flowerColor=None,cloudType=None):
     super().__init__(tileType=tileType, value=value, range=range)
-    self.featureType = featureType
-    self.flowerColor = flowerColor
-    self.cloudType = cloudType
+    self.featureType = BeeFeatureType(featureType)
+    self.flowerColor = FlowerColor(flowerColor)
+    self.cloudType = CloudType(cloudType)
 
   def draw(self, x, y):
     super().draw(x, y)
@@ -253,7 +257,7 @@ class BeeCell(Cell):
     if (self.cloudType != CloudType.NONE):
       self.shape(_shapefile("cloud"))
     elif (self.isFlower()):
-      if (self.flowerColor and self.flowerColor > 0):
+      if (self.flowerColor != FlowerColor.RED):
         self.shape(_shapefile("purple_flower"))
       else:
         self.shape(_shapefile("red_flower"))
@@ -306,7 +310,9 @@ class Maze:
       checklast = filename
       filename = f"../{filename}"
     if (not os.path.exists(filename)):
-      filename = _search_path(checklast, "")
+      filename = os.path.join(_script_path, checklast)
+    if (not os.path.exists(filename)):
+      filename = _search_path(checklast, "", False)
 
     if (not os.path.exists(filename)):
       raise TypeError("Unable to find file for level " + filename)
@@ -372,16 +378,62 @@ class Maze:
 
     self.pen.tick()
   
+  def _parse_maze(self, levelProps):
+    # "maze":          "[0,0,2,1,1,0,0,0],[0,0,0,0,\"FC\",0,0,0],[0,0,0,0,\"FC\",0,0,0]",
+    # "initial_dirt":  "[0,0,0,0,0,0,0,0],[0,0,0,0,-98,0,0,0],[0,0,0,0,1,0,0,0]",
+    # "final_dirt":    "[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]",
+    # "serialized_maze": "[
+    #      [{\"tileType\":0},{\"tileType\":0},{\"tileType\":2},{\"tileType\":1},{\"tileType\":1},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0}],
+    #      [{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":1,\"featureType\":2,\"value\":1,\"cloudType\":2,\"range\":1},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0}],
+    #      [{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":1,\"featureType\":2,\"value\":1,\"cloudType\":2,\"range\":1},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0}]",
+    maze = json.loads(levelProps["maze"])
+    initialDirt = json.loads(levelProps["initial_dirt"])
+
+    parsed_maze = []
+    for r in range(len(maze)):
+      row = []
+      parsed_maze.append(row)
+      for c in range(len(maze[r])):
+        cell = self._parse_cell_from_old_values(maze[r][c], initialDirt[r][c])
+        row.append(cell)
+
+    return parsed_maze
+
+
+  @staticmethod
+  def _parse_cell_from_old_values(mapCell, initialDirtCell):
+    mapCell = str(mapCell)
+    initialDirtCell = int(initialDirtCell);
+    tileType = featureType = value = cloudType = flowerColor = None
+
+    if initialDirtCell != 0 and any(substring in mapCell for substring in ['1', 'R', 'P', 'FC']):
+        tileType = SquareType.OPEN
+        featureType = BeeFeatureType.FLOWER if initialDirtCell > 0 else BeeFeatureType.HIVE
+        value = abs(initialDirtCell)
+        cloudType = CloudType.STATIC if mapCell == 'FC' else CloudType.NONE
+        if mapCell == 'R':
+            flowerColor = FlowerColor.RED
+        elif mapCell == 'P':
+            flowerColor = FlowerColor.PURPLE
+        else:
+            flowerColor = FlowerColor.DEFAULT
+    else:
+        tileType = int(mapCell)
+
+    return dict(tileType=tileType, featureType=featureType, value=value, cloudType=cloudType, flowerColor=flowerColor)
+
+
 
   def _setup_maze(self, level):
     levelProps = level['properties']
-    parsed_maze = level.get('parsed_maze')
-    if (not parsed_maze):
-      parsed_maze = json.loads(levelProps["serialized_maze"])
-      level['parsed_maze'] = parsed_maze
+    
+    maze = None
+    if levelProps.get("serialized_maze"):
+      maze = json.loads(levelProps.get("serialized_maze"))
 
-    maze = level['parsed_maze']
-    startCell = None
+    if not maze:
+      maze = self._parse_maze(levelProps)
+
     rows = len(maze)
     self.height = rows * 50
     self.grid = []
@@ -426,6 +478,7 @@ class Maze:
       self.player.turtle.setheading(dir.to_heading())
 
     self.update()
+
 
   def update(self):
     coords = self.player.gridcoords()
@@ -615,16 +668,22 @@ class Player():
 
 
 
-# Get the directory of the current Python file
+# Get the directory of this Python file
 _dir_path = os.path.dirname(os.path.realpath(__file__))
 
-def _search_path(filename, ext):
+# Get the directory of the Python file being run
+_script_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+def _search_path(filename, ext, failIfNotFound=True):
   if (not os.path.exists(filename)):
     filename = f"{filename}{ext}"
   
+  # Typical scenario for the shape images
   othername = os.path.join(_dir_path, filename)
   if (os.path.exists(othername)):
     return othername
+  
+
   
   if (not os.path.exists(filename)):
     filename = os.path.join("maze", filename)
@@ -635,7 +694,8 @@ def _search_path(filename, ext):
   if (not os.path.exists(filename)):
     filename = os.path.join("..", filename)
   if (not os.path.exists(filename)):
-    raise TypeError("Unable to shape file for " + filename)
+    if failIfNotFound:
+      raise TypeError("Unable to shape file for " + filename)
   
   return filename
 

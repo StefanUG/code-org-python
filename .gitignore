@@ -2,3 +2,4 @@ from/
 skins
 **/*.egg-info
 **/__pycache__
+**/*.pyx

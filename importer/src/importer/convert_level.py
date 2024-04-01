@@ -21,7 +21,6 @@ def create_level_json(levelfiles:list, target_dir):
       # Load the JSON data as a Python dictionary
       data = json.loads(json_data)
       loaded_json.append(data)
-      data["parsed_maze"] = json.loads(data["properties"]["serialized_maze"])
 
       filename = os.path.basename(levelfile)
       filename = os.path.splitext(filename)[0]
