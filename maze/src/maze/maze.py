@@ -203,123 +203,36 @@ class HarvesterFeatureType(Enum):
   LETTUCE = 3
 
 
-###
-### Bee Stuff
-###
-class BeeFeatureType(Enum):
-  NONE = None
-  HIVE = 0
-  FLOWER = 1
-  VARIABLE = 2
+class MazeType():
 
-class CloudType(Enum):
-  NONE = None
-  STATIC = 0 
-  HIVE_OR_FLOWER = 1
-  FLOWER_OR_NOTHING = 2
-  HIVE_OR_NOTHING = 3
-  ANY = 4
+  cellClass = None
+  playerClass = None
 
-class FlowerColor(Enum):
-  DEFAULT = None
-  RED = 0
-  PURPLE = 1
+  def __init__(self, cellClass, playerClass):
+    super().__init__()
+    self.cellClass = cellClass
+    self.playerClass = playerClass
 
-class BeeCell(Cell):
-  featureType = 0
-  flowerColor = 0
-  cloudType = 0  
-
-  def __init__(self,tileType=0, value=0, range=0,featureType=None,flowerColor=None,cloudType=None):
-    super().__init__(tileType=tileType, value=value, range=range)
-    self.featureType = BeeFeatureType(featureType)
-    self.flowerColor = FlowerColor(flowerColor)
-    self.cloudType = CloudType(cloudType)
-
-  def draw(self, x, y):
-    super().draw(x, y)
-    if (not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
-      self.value = 0
-    self.redraw()
-
-  def isFlower(self):
-    return self.featureType == BeeFeatureType.FLOWER
-
-  def isHive(self):
-    return self.featureType == BeeFeatureType.HIVE
-
-  def redraw(self):
-    if (self.isCloud() or self.featureType not in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
-      self.showturtle()
-    else:
-      self.hideturtle()
-    
-    if (self.cloudType != CloudType.NONE):
-      self.shape(_shapefile("cloud"))
-    elif (self.isFlower()):
-      if (self.flowerColor != FlowerColor.RED):
-        self.shape(_shapefile("purple_flower"))
-      else:
-        self.shape(_shapefile("red_flower"))
-      self.drawValue()
-    elif (self.isHive()):
-      self.shape(_shapefile("honeycomb"))
-      self.drawValue()
-
-  def isCloud(self):
-    return self.cloudType != CloudType.NONE
+  def newPlayer(self, maze):
+    return self.playerClass(maze)
   
-  def needs_visit(self):
-    return self.isCloud() or self.isFlower() or self.isHive()
+  def newCell(self, cellDict):
+    return self.cellClass(**cellDict)
   
-  def reveal(self):
-    possibilities = None
-    if (self.isCloud()):
-      if (self.cloudType == CloudType.HIVE_OR_FLOWER):
-        possibilities = [BeeFeatureType.HIVE, BeeFeatureType.FLOWER]
-      elif (self.cloudType == CloudType.FLOWER_OR_NOTHING):
-        possibilities = [BeeFeatureType.FLOWER, BeeFeatureType.FLOWER, BeeFeatureType.NONE]
-      elif (self.cloudType == CloudType.HIVE_OR_NOTHING):
-        possibilities = [BeeFeatureType.HIVE, BeeFeatureType.HIVE, BeeFeatureType.NONE]
-      elif (self.cloudType == CloudType.ANY):
-        possibilities = [BeeFeatureType.NONE, BeeFeatureType.HIVE, BeeFeatureType.FLOWER]
-
-      if (possibilities):
-        self.featureType = random.choice(possibilities)
-
-      if (self.featureType == BeeFeatureType.NONE):
-        # When there is no feature type, set the value to 0 so that 
-        # we can detect the win condition properly
-        self.value = 0
-      elif self.value == 0:
-        self.value = 1
-
-      self.cloudType = CloudType.NONE
-      self.redraw()
-
+  def setup(self, level, screen):
+    """
+    Dummy method to be implemented by subclass
+    """
+    return
+  
+  def parse_cell_from_old_values(mapCell, initialDirtCell):
+    """
+    Dummy method to be implemented by subclass
+    """
+    return
 
 
 class Maze:
-  @staticmethod
-  def from_file(filename):
-    if (not os.path.exists(filename)):
-      filename = f"{filename}.json"
-    if (not os.path.exists(filename)):
-      filename = f"levels/{filename}"
-    if (not os.path.exists(filename)):
-      checklast = filename
-      filename = f"../{filename}"
-    if (not os.path.exists(filename)):
-      filename = os.path.join(_script_path, checklast)
-    if (not os.path.exists(filename)):
-      filename = _search_path(checklast, "", False)
-
-    if (not os.path.exists(filename)):
-      raise TypeError("Unable to find file for level " + filename)
-    
-    with open(filename) as fp:
-      level_json = json.load(fp)
-      return Maze(level_json)
 
   @staticmethod
   def _testmode():
@@ -328,6 +241,7 @@ class Maze:
     _TRACER_DELAY = 0
     _TRACER_N = 0
 
+  mazeType = None
 
   name = None
   screen = turtle.Screen()
@@ -348,18 +262,18 @@ class Maze:
 
   pen = None
 
-  def __init__(self, level):
+  def __init__(self, level, mazeType):
     Maze.instance = self
+    self.mazeType = mazeType
 
     levelProps = level['properties']
+
+    mazeType.setup(level)
 
     self.screen.bgcolor("white")
     self.screen.setup(410,410)
     self.screen.tracer(0,0)
     self.screen.bgpic(_shapefile(levelProps['skin'] + "_background", ".png"))
-
-    # register sprites
-    bee_shape = ((0,-22),(-4,-20),(-7,-13),(7,-13),(-7,-13),(-7.6,-5.6),(7.6,-5.6),(-7.6,-5.6),(-2.6,7.4),(-13.1,-10.5),(-18,-13),(-23,-11),(-25,-6),(-23,-1),(-2.6,7.5),(-7,9),(-6,15),(-4,17),(-7,20),(-11,22),(-7,20),(-4,17),(0,18),(4,17),(7,20),(11,22),(7,20),(4,17),(6,15),(7,9),(2.6,7.5),(23,-1),(25,-6),(23,-11),(18,-13),(13.1,-10.5),(2.6,7.4),(7.6,-5.6),(7,-13),(4,-20))
 
     self.screen.register_shape(_shapefile("cloud"))
     self.screen.register_shape(_shapefile("earth"))
@@ -368,7 +282,6 @@ class Maze:
     self.screen.register_shape(_shapefile("purple_flower"))
     self.screen.register_shape(_shapefile("red_flower"))
     self.screen.register_shape(_shapefile("honeycomb"))
-    self.screen.register_shape("bee", bee_shape)
 
     if (levelProps['skin'] == 'bee'):
       self.cellType = BeeCell
@@ -378,14 +291,7 @@ class Maze:
 
     self.pen.tick()
   
-  def _parse_maze(self, levelProps):
-    # "maze":          "[0,0,2,1,1,0,0,0],[0,0,0,0,\"FC\",0,0,0],[0,0,0,0,\"FC\",0,0,0]",
-    # "initial_dirt":  "[0,0,0,0,0,0,0,0],[0,0,0,0,-98,0,0,0],[0,0,0,0,1,0,0,0]",
-    # "final_dirt":    "[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0]",
-    # "serialized_maze": "[
-    #      [{\"tileType\":0},{\"tileType\":0},{\"tileType\":2},{\"tileType\":1},{\"tileType\":1},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0}],
-    #      [{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":1,\"featureType\":2,\"value\":1,\"cloudType\":2,\"range\":1},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0}],
-    #      [{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0},{\"tileType\":1,\"featureType\":2,\"value\":1,\"cloudType\":2,\"range\":1},{\"tileType\":0},{\"tileType\":0},{\"tileType\":0}]",
+  def parse_maze(self, levelProps):
     maze = json.loads(levelProps["maze"])
     initialDirt = json.loads(levelProps["initial_dirt"])
 
@@ -394,34 +300,10 @@ class Maze:
       row = []
       parsed_maze.append(row)
       for c in range(len(maze[r])):
-        cell = self._parse_cell_from_old_values(maze[r][c], initialDirt[r][c])
+        cell = self.type.parse_cell_from_old_values(maze[r][c], initialDirt[r][c])
         row.append(cell)
 
     return parsed_maze
-
-
-  @staticmethod
-  def _parse_cell_from_old_values(mapCell, initialDirtCell):
-    mapCell = str(mapCell)
-    initialDirtCell = int(initialDirtCell);
-    tileType = featureType = value = cloudType = flowerColor = None
-
-    if initialDirtCell != 0 and any(substring in mapCell for substring in ['1', 'R', 'P', 'FC']):
-        tileType = SquareType.OPEN
-        featureType = BeeFeatureType.FLOWER if initialDirtCell > 0 else BeeFeatureType.HIVE
-        value = abs(initialDirtCell)
-        cloudType = CloudType.STATIC if mapCell == 'FC' else CloudType.NONE
-        if mapCell == 'R':
-            flowerColor = FlowerColor.RED
-        elif mapCell == 'P':
-            flowerColor = FlowerColor.PURPLE
-        else:
-            flowerColor = FlowerColor.DEFAULT
-    else:
-        tileType = int(mapCell)
-
-    return dict(tileType=tileType, featureType=featureType, value=value, cloudType=cloudType, flowerColor=flowerColor)
-
 
 
   def _setup_maze(self, level):
@@ -533,23 +415,22 @@ class Maze:
 
 class Player():
   maze:Maze = None
+  instance = None
 
-  turtle = turtle.Turtle()
+  _turtle = turtle.Turtle()
 
   def __init__(self, maze):
     Player.instance = self
     self.maze = maze
 
-    self.turtle.color("black","yellow")
-    self.turtle.shape("bee")
-    self.turtle.penup()
-    self.turtle.speed(1)
+    self._turtle.penup()
+    self._turtle.speed(1)
 
     self.at_hive = self.at_honeycomb
 
   def is_collision(self, other):
-    a = self.turtle.xcor()-other.turtle.xcor()
-    b = self.turtle.ycor()-other.turtle.ycor()
+    a = self._turtle.xcor()-other.turtle.xcor()
+    b = self._turtle.ycor()-other.turtle.ycor()
     distance = math.sqrt((a**2)+(b**2))
 
     if distance < 5:
@@ -566,8 +447,8 @@ class Player():
     >>> pegman.pos()
     (1, 8)
     """
-    col = round((self.maze.width/2  + (self.turtle.xcor()-25)) / 50)
-    row = round((self.maze.height/2 - (self.turtle.ycor()+25) ) / 50)
+    col = round((self.maze.width/2  + (self._turtle.xcor()-25)) / 50)
+    row = round((self.maze.height/2 - (self._turtle.ycor()+25) ) / 50)
     return (col, row)
   
   def _getCurrentCell(self) -> Cell:
@@ -584,23 +465,23 @@ class Player():
     print("fail")
     if (_TRACER_N > 0):
       if (undo):
-        self.turtle.undo()
-      self.turtle.color("black","red")
+        self._turtle.undo()
+      self._turtle.color("black","red")
       self.maze.pen.draw_failure()
-      self.turtle.getscreen().mainloop()
+      self._turtle.getscreen().mainloop()
 
   def _success(self):
     print("success")
     if (_TRACER_N > 0):
       self.maze.pen.draw_success()
-      self.turtle.speed(8)
-      self.turtle.right(360)
-      self.turtle.left(360)
-      self.turtle.getscreen().mainloop()
+      self._turtle.speed(8)
+      self._turtle.right(360)
+      self._turtle.left(360)
+      self._turtle.getscreen().mainloop()
 
   def _process(self, cond):
-    color = self.turtle.color()
-    self.turtle.color("black", "orange")
+    color = self._turtle.color()
+    self._turtle.color("black", "orange")
     cell = self._getCurrentCell()
     if (cond(cell)):
       if (cell.value <= 0):
@@ -610,7 +491,7 @@ class Player():
     else:
       self._fail()
 
-    self.turtle.color(color[0], color[1])
+    self._turtle.color(color[0], color[1])
 
   def _get_value_if(self, cellCond):
     cell = self._getCurrentCell()
@@ -621,33 +502,21 @@ class Player():
     
   def forward(self, steps=1):
     for i in range(steps):
-      self.turtle.forward(50)
+      self._turtle.forward(50)
       self._check()
 
   move_forward = forward
   go_forward = forward
 
   def right(self):
-    self.turtle.right(90)
+    self._turtle.right(90)
 
   def left(self):
-    self.turtle.left(90)
-
-  def at_flower(self):
-    return self._getCurrentCell().isFlower()
-
-  def at_honeycomb(self):
-    return self._getCurrentCell().isHive()
-  
-  def nectar(self):
-    return self._get_value_if(lambda cell: cell.isFlower())
-
-  def honey(self):
-    return self._get_value_if(lambda cell: cell.isHive())
+    self._turtle.left(90)
 
   def path_ahead(self):
     coords = self.gridcoords()
-    head = self.turtle.heading()
+    head = self._turtle.heading()
     cell = None
     if (head == Direction.NORTH.to_heading()):
       cell = self.maze.getCell((coords[0], coords[1]-1))
@@ -659,13 +528,6 @@ class Player():
       cell = self.maze.getCell((coords[0]-1, coords[1]))
     
     return cell is not None and cell.isOpen()
-
-  def get_nectar(self):
-    self._process(lambda cell: cell.isFlower())
-
-  def make_honey(self):
-    self._process(lambda cell: cell.isHive())
-
 
 
 # Get the directory of this Python file

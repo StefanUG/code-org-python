@@ -29,5 +29,5 @@ Specific mentions should go to the following for the bits I used.
 
 * Honeycomb:
   https://admurin.itch.io/ - Admurin
-  
-
+* Grass background based on tiles from Daniel Eddeland under GNU GPL 3.0 or later
+* Flowers from "[LPC] Flowers / Plants / Fungi / Wood"
