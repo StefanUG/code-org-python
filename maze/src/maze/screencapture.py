@@ -8,7 +8,7 @@ Module to capture a turtle screen into image files
 def capture(screen:turtle.Screen, filename=None):
   if (not filename):
     dt = datetime.datetime.now()
-    filename = f"{dt.strftime("%Y-%m-%d %H.%M.%S")} screen"
+    filename = dt.strftime("%Y-%m-%d %H.%M.%S") + " screen"
 
   psfile = filename + ".ps"
   canvas = screen.getcanvas() 
