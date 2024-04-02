@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_nestedLoops7_2023")
+maze = Puzzle.from_file("courseD_bee_nestedLoops7_2023")
 bee = maze.player
 
 '''
@@ -17,4 +17,4 @@ Challenge: Figure out how to get all of the nectar using only the blocks availab
 
 
 # Keep this
-done()
+Puzzle.done()

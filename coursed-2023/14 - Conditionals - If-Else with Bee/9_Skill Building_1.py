@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals7_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals7_2023")
 bee = maze.player
 
 '''
@@ -19,4 +19,4 @@ Use the `if/else` block to collect nectar at flowers and make honey at honeycomb
 
 
 # Keep this
-done()
+Puzzle.done()

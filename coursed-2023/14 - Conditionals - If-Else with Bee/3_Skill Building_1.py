@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals2_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals2_2023")
 bee = maze.player
 
 '''
@@ -21,4 +21,4 @@ Check underneath every cloud to see if it is hiding a flower before you get nect
 
 
 # Keep this
-done()
+Puzzle.done()

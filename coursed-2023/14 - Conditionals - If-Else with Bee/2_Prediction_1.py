@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals1_predict1_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals1_predict1_2023")
 bee = maze.player
 
 '''
@@ -19,4 +19,4 @@ Check to see if there's a flower under the cloud. If there's a flower, get necta
 
 
 # Keep this
-done()
+Puzzle.done()

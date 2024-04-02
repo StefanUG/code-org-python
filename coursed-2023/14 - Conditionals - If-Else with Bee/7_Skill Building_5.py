@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals6_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals6_2023")
 bee = maze.player
 
 '''
@@ -19,4 +19,4 @@ Some of these clouds might have honeycombs under them.  Be sure to check if a ho
 
 
 # Keep this
-done()
+Puzzle.done()

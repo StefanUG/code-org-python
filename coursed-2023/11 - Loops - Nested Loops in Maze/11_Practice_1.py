@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_nestedLoops8_2023")
+maze = Puzzle.from_file("courseD_bee_nestedLoops8_2023")
 bee = maze.player
 
 '''
@@ -17,4 +17,4 @@ Collect all of the nectar from each flower and make honey at the honeycomb.
 
 
 # Keep this
-done()
+Puzzle.done()

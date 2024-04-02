@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals4_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals4_2023")
 bee = maze.player
 
 '''
@@ -19,4 +19,4 @@ Get all of the nectar using as few blocks as possible.
 
 
 # Keep this
-done()
+Puzzle.done()

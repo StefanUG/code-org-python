@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals3_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals3_2023")
 bee = maze.player
 
 '''
@@ -19,4 +19,4 @@ You can only collect nectar from flowers, but you can check any space to see if 
 
 
 # Keep this
-done()
+Puzzle.done()
