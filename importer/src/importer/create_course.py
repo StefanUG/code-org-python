@@ -44,7 +44,12 @@ def find_course_file(coursename, source_dir):
 
 def create_level_python(level_filename, level_key, course, lesson, level):
   environment = Environment(loader=FileSystemLoader(_dir_path))
-  template = environment.get_template("maze_bee.py.j2")
+  skin = level['config']['properties'].get('skin')
+  if skin and skin in ['pvz', 'bee']:
+    skin = "_" + skin
+  else: 
+    skin = ""
+  template = environment.get_template(f"maze{skin}.py.j2")
   content = template.render(course=course, lesson=lesson, level=level, levelname=level_key)
   with open(f"{level_filename}.py", mode="w", encoding="utf-8") as file:
     file.write(content)
