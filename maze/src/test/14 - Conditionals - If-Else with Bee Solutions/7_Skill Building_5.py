@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals6_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals6_2023")
 bee = maze.player
 
 '''
@@ -22,4 +22,4 @@ for i in range(2):
     bee.left()
 
 # Keep this
-done()
+maze.done()

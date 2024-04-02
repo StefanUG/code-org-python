@@ -27,7 +27,17 @@ Code.org has exclusive rights to their artwork and graphics, so I had to find al
 The graphics and artwork is found on https://opengameart.org/
 Specific mentions should go to the following for the bits I used.
 
-* Honeycomb:
-  https://admurin.itch.io/ - Admurin
-* Grass background based on tiles from Daniel Eddeland under GNU GPL 3.0 or later
-* Flowers from "[LPC] Flowers / Plants / Fungi / Wood"
+
+## Maze Games
+
+### Bee
+
+* Honeycomb from [Admurin's Insect Items](https://opengameart.org/content/admurins-insect-items)
+* Grass background from [LPC Tile Atlas](https://opengameart.org/content/lpc-tile-atlas)
+* Flowers from [Plants and Flowers - Pixel Art](https://opengameart.org/content/plants-and-flowers-pixel-art)
+
+### Plants vs. Zombies
+
+* Ground tiles from [Whispers of Avalon: Grassland Tileset](https://opengameart.org/content/whispers-of-avalon-grassland-tileset)
+* Evil Flower obstacle from: [Bevouliin Free sprite sheets - Plant Monster](https://opengameart.org/content/bevouliin-free-sprite-sheets-plant-monster)
+* Sunflower from [Plants and Flowers - Pixel Art](https://opengameart.org/content/plants-and-flowers-pixel-art)

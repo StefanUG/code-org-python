@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_nestedLoops8_2023")
+maze = Puzzle.from_file("courseD_bee_nestedLoops8_2023")
 bee = maze.player
 
 '''
@@ -27,4 +27,4 @@ for n in range(4):
 
 
 # Keep this
-done()
+maze.done()

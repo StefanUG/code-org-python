@@ -1,6 +1,6 @@
-from maze import *
+from maze import Puzzle
 
-maze = Maze.from_file("courseD_bee_conditionals1_predict1_2023")
+maze = Puzzle.from_file("courseD_bee_conditionals1_predict1_2023")
 bee = maze.player
 
 '''
@@ -21,4 +21,4 @@ if bee.at_flower():
 
 
 # Keep this
-done()
+maze.done()

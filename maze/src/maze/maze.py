@@ -12,30 +12,9 @@ _TESTMODE = os.environ.get('TESTMODE')
 _TRACER_DELAY = 0 if _TESTMODE == "True" else 15
 _TRACER_N     = 0 if _TESTMODE == "True" else 1
 
-"""
-Global functions to make it easier to code the solutions
-"""
 
-def forward(steps=1):
-  Player.instance.go_forward(steps)
-
-def right():
-  Player.instance.right()
-
-def left():
-  Player.instance.left()
-
-def at_flower():
-  return Player.instance.at_flower()
-
-def at_honeycomb():
-  return Player.instance.at_hive()
-
-at_hive = at_honeycomb
-
-def done():
-  Maze.instance.done()
-
+# Get the directory of this Python file
+_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 class Pen(turtle.Turtle):
@@ -79,7 +58,7 @@ class Path(turtle.Turtle):
   def  __init__(self):
     turtle.Turtle.__init__(self)
     self.setheading(90)
-    self.shape(_shapefile("earth"))
+    self.shape(Maze.shapefile("path"))
     self.color("brown")
     self.penup()
     self.speed(0)
@@ -91,21 +70,16 @@ class Path(turtle.Turtle):
     self.stamp()
 
 class Cell(turtle.Turtle):
-  tileType = 0
-  originalValue = 0
-  currentValue = 0
-  value = 0
-  range = 0
-
-  x = 0
-  y = 0
-
+  
   def __init__(self, tileType=0, value=0, range=0):
     super().__init__()
     self.tileType = SquareType(tileType)
     self.value = value
     self.originalValue = value
     self.range = range
+
+    self.x = 0
+    self.y = 0
 
     self.setheading(90)
     self.color("white")
@@ -137,6 +111,12 @@ class Cell(turtle.Turtle):
 
   def isOpen(self):
     return self.tileType.isOpen()
+  
+  def isObstacle(self):
+    return self.tileType.isObstacle()
+  
+  def isFinish(self):
+    return self.tileType.isFinish()
 
   @staticmethod
   def sort_list(list):
@@ -154,11 +134,17 @@ class SquareType(Enum):
   def isOpen(self):
     return self.value > 0
   
+  def isObstacle(self):
+    return self == SquareType.OBSTACLE
+  
   def isWall(self):
     return self.value == 0
 
   def isStart(self):
     return self in [SquareType.START, SquareType.STARTANDFINISH]
+  
+  def isFinish(self):
+    return self in [SquareType.FINISH, SquareType.STARTANDFINISH]
 
 
 class Direction(Enum):
@@ -192,44 +178,53 @@ class Direction(Enum):
     
     return 0
 
-
-###
-### Harvester Stuff
-###
-class HarvesterFeatureType(Enum):
-  NONE = 0
-  CORN = 1
-  PUMPKIN = 2
-  LETTUCE = 3
-
-
 class MazeType():
 
-  cellClass = None
-  playerClass = None
+  def __init__(self):
+      super().__init__()
+      self.subfolder = None
 
-  def __init__(self, cellClass, playerClass):
-    super().__init__()
-    self.cellClass = cellClass
-    self.playerClass = playerClass
+      self.pathClass = Path
+      self.cellClass = Cell
+      self.playerClass = Player
+      
+      self._path = None
 
   def newPlayer(self, maze):
-    return self.playerClass(maze)
+      return self.playerClass(maze)
   
-  def newCell(self, cellDict):
-    return self.cellClass(**cellDict)
+  def newCell(self, cellDict) -> Cell:
+      return self.cellClass(**cellDict)
   
+  def path(self):
+      if self._path == None:
+          self._path = self.pathClass()
+      return self._path
+
   def setup(self, level, screen):
     """
-    Dummy method to be implemented by subclass
+    Method is called before starting to render and setup the Maze
     """
-    return
+
+  def after_move(self, maze):
+    """
+    Method is called after each move, to handle any actions that are needed
+    """
+
+
   
-  def parse_cell_from_old_values(mapCell, initialDirtCell):
+  def parse_cell_from_old_values(self, mapCell, initialDirtCell):
     """
-    Dummy method to be implemented by subclass
+    Simplest method to parse the cell
     """
-    return
+    mapCell = str(mapCell)
+    if initialDirtCell:
+      initialDirtCell = int(initialDirtCell)
+
+    tileType = int(mapCell)
+    value = initialDirtCell
+
+    return dict(tileType=tileType, value=value)
 
 
 class Maze:
@@ -241,51 +236,38 @@ class Maze:
     _TRACER_DELAY = 0
     _TRACER_N = 0
 
-  mazeType = None
+  @staticmethod
+  def shapefile(name, ext=".gif"):
+    name = os.path.join(Maze.instance.mazeType.subfolder, name)
+    return os.path.join(_DIR_PATH, "images", name + ext)
 
-  name = None
-  screen = turtle.Screen()
-  treasures = []
-  walls = []
-  player = None
-  path = None
 
-  width = 0
-  height = 0
-  
-  cellType = Cell
+  instance = None
 
-  grid = []
+  def __init__(self, level:dict, mazeType:MazeType):
+    Maze.instance:Maze = self
+    self.mazeType:MazeType = mazeType
 
-  cells_to_visit = []
-  visited = []
+    self.screen = turtle.Screen()
+    self.walls = []
+    self.player = None
+    self.path = None
 
-  pen = None
+    self.width = 0
+    self.height = 0
 
-  def __init__(self, level, mazeType):
-    Maze.instance = self
-    self.mazeType = mazeType
+    self.grid = []
 
-    levelProps = level['properties']
+    self.cells_to_visit = []
+    self.visited = []
 
-    mazeType.setup(level)
+    self.pen = Pen()
+
+    mazeType.setup(level, self.screen)
 
     self.screen.bgcolor("white")
-    self.screen.setup(410,410)
+    self.screen.setup(410,410) # TODO Add dynamic size
     self.screen.tracer(0,0)
-    self.screen.bgpic(_shapefile(levelProps['skin'] + "_background", ".png"))
-
-    self.screen.register_shape(_shapefile("cloud"))
-    self.screen.register_shape(_shapefile("earth"))
-    self.screen.register_shape(_shapefile("hole"))
-    self.screen.register_shape(_shapefile("pile"))
-    self.screen.register_shape(_shapefile("purple_flower"))
-    self.screen.register_shape(_shapefile("red_flower"))
-    self.screen.register_shape(_shapefile("honeycomb"))
-
-    if (levelProps['skin'] == 'bee'):
-      self.cellType = BeeCell
-      self.path = Path()
 
     self._setup_maze(level)
 
@@ -293,14 +275,17 @@ class Maze:
   
   def parse_maze(self, levelProps):
     maze = json.loads(levelProps["maze"])
-    initialDirt = json.loads(levelProps["initial_dirt"])
+    initial_dirt_matrix = levelProps.get("initial_dirt")
+    initialDirt = None
+    if initial_dirt_matrix:
+      initialDirt = json.loads(initial_dirt_matrix)
 
     parsed_maze = []
     for r in range(len(maze)):
       row = []
       parsed_maze.append(row)
       for c in range(len(maze[r])):
-        cell = self.type.parse_cell_from_old_values(maze[r][c], initialDirt[r][c])
+        cell = self.mazeType.parse_cell_from_old_values(maze[r][c],initialDirt[r][c] if initialDirt else None)
         row.append(cell)
 
     return parsed_maze
@@ -314,12 +299,11 @@ class Maze:
       maze = json.loads(levelProps.get("serialized_maze"))
 
     if not maze:
-      maze = self._parse_maze(levelProps)
+      maze = self.parse_maze(levelProps)
 
     rows = len(maze)
     self.height = rows * 50
     self.grid = []
-    self.pen = Pen()
 
     for y in range(rows):
       row = []
@@ -329,15 +313,15 @@ class Maze:
         if (self.width == 0):
           self.width = cols * 50
 
-        cell = self.cellType(**maze[y][x])
+        cell = self.mazeType.newCell(maze[y][x])
         row.append(cell)
 
         screen_x = -1*((self.width/2)-25) + (x * 50)
         screen_y = (self.height/2-25) - (y * 50)
 
         if (cell.tileType.isOpen()):
-          if (self.path):
-            self.path.draw(screen_x, screen_y)
+          if (self.mazeType.path()):
+            self.mazeType.path().draw(screen_x, screen_y)
           if (cell.needs_visit()):
             self.cells_to_visit.append(cell)
         
@@ -351,13 +335,13 @@ class Maze:
 
     Cell.sort_list(self.cells_to_visit)
 
-    self.player = Player(self)
-    self.player.turtle.goto(self.startCell.x, self.startCell.y)
+    self.player = self.mazeType.newPlayer(self)
+    self.player._turtle.goto(self.startCell.x, self.startCell.y)
 
     dir = levelProps.get("start_direction")
     if (dir):
       dir = Direction(dir)
-      self.player.turtle.setheading(dir.to_heading())
+      self.player._turtle.setheading(dir.to_heading())
 
     self.update()
 
@@ -369,16 +353,7 @@ class Maze:
       self.visited.append(cell)
       Cell.sort_list(self.visited)
       
-    self.getCell((coords[0], coords[1])).reveal()
-    if (coords[1] > 0): # reveal above
-      self.getCell((coords[0], coords[1]-1)).reveal()
-    if (coords[0] > 0): # reveal left
-      self.getCell((coords[0]-1, coords[0])).reveal()
-    if (coords[1] < len(self.grid)-1): # reveal below
-      self.getCell((coords[0], coords[1]+1)).reveal()
-    if (coords[0] < len(self.grid[coords[1]])-1): # reveal right
-      self.getCell((coords[0]+1, coords[1])).reveal()
-
+    self.mazeType.after_move(self)
 
     self.pen.tick()
 
@@ -396,7 +371,7 @@ class Maze:
     return False
   
   def get_cell_values(self):
-      return functools.reduce(lambda v, cell: v + cell.value, self.visited, 0)
+      return functools.reduce(lambda v, cell: v + (cell.value if cell.value else 0), self.visited, 0)
 
 
 
@@ -425,8 +400,6 @@ class Player():
 
     self._turtle.penup()
     self._turtle.speed(1)
-
-    self.at_hive = self.at_honeycomb
 
   def is_collision(self, other):
     a = self._turtle.xcor()-other.turtle.xcor()
@@ -528,39 +501,4 @@ class Player():
       cell = self.maze.getCell((coords[0]-1, coords[1]))
     
     return cell is not None and cell.isOpen()
-
-
-# Get the directory of this Python file
-_dir_path = os.path.dirname(os.path.realpath(__file__))
-
-# Get the directory of the Python file being run
-_script_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-
-def _search_path(filename, ext, failIfNotFound=True):
-  if (not os.path.exists(filename)):
-    filename = f"{filename}{ext}"
-  
-  # Typical scenario for the shape images
-  othername = os.path.join(_dir_path, filename)
-  if (os.path.exists(othername)):
-    return othername
-  
-
-  
-  if (not os.path.exists(filename)):
-    filename = os.path.join("maze", filename)
-  if (not os.path.exists(filename)):
-    filename = os.path.join("src", filename)
-  if (not os.path.exists(filename)):
-    filename = os.path.join("maze", filename)
-  if (not os.path.exists(filename)):
-    filename = os.path.join("..", filename)
-  if (not os.path.exists(filename)):
-    if failIfNotFound:
-      raise TypeError("Unable to shape file for " + filename)
-  
-  return filename
-
-def _shapefile(name, ext=".gif"):
-  return _search_path(name, ext)
 
