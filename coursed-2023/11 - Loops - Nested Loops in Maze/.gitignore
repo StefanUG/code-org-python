@@ -1,0 +1,7 @@
+# The extras don't work yet
+*Extras*
+levels/*collector*.json
+levels/*harvester*.json
+
+# This one is a quiz, which isn't supported here.
+*Prediction_1.py
