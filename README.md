@@ -41,3 +41,8 @@ Specific mentions should go to the following for the bits I used.
 * Ground tiles from [Whispers of Avalon: Grassland Tileset](https://opengameart.org/content/whispers-of-avalon-grassland-tileset)
 * Evil Flower obstacle from: [Bevouliin Free sprite sheets - Plant Monster](https://opengameart.org/content/bevouliin-free-sprite-sheets-plant-monster)
 * Sunflower from [Plants and Flowers - Pixel Art](https://opengameart.org/content/plants-and-flowers-pixel-art)
+
+### Farmer aka. Harvester
+
+* Crops from [LPC Crops](https://opengameart.org/content/lpc-crops)
+* Background from [LPC Farming tilesets, magic animations and UI elements](https://opengameart.org/content/lpc-farming-tilesets-magic-animations-and-ui-elements)
