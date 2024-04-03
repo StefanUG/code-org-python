@@ -33,24 +33,24 @@ class BeeMazeType(MazeType):
         if (coords[0] < len(maze.grid[coords[1]])-1): # reveal right
             maze.getCell((coords[0]+1, coords[1])).reveal()
 
-    def parse_cell_from_old_values(self, mapCell, initialDirtCell):
-        mapCell = str(mapCell)
-        initialDirtCell = int(initialDirtCell)
+    def parse_cell_from_old_values(self, map_cell, initial_dirt_cell):
+        map_cell = str(map_cell)
+        initial_dirt_cell = int(initial_dirt_cell)
         tileType = featureType = value = cloudType = flowerColor = None
 
-        if initialDirtCell != 0 and any(substring in mapCell for substring in ['1', 'R', 'P', 'FC']):
+        if initial_dirt_cell != 0 and any(substring in map_cell for substring in ['1', 'R', 'P', 'FC']):
             tileType = SquareType.OPEN
-            featureType = BeeFeatureType.FLOWER if initialDirtCell > 0 else BeeFeatureType.HIVE
-            value = abs(initialDirtCell)
-            cloudType = CloudType.STATIC if mapCell == 'FC' else CloudType.NONE
-            if mapCell == 'R':
+            featureType = BeeFeatureType.FLOWER if initial_dirt_cell > 0 else BeeFeatureType.HIVE
+            value = abs(initial_dirt_cell)
+            cloudType = CloudType.STATIC if map_cell == 'FC' else CloudType.NONE
+            if map_cell == 'R':
                 flowerColor = FlowerColor.RED
-            elif mapCell == 'P':
+            elif map_cell == 'P':
                 flowerColor = FlowerColor.PURPLE
             else:
                 flowerColor = FlowerColor.DEFAULT
         else:
-            tileType = int(mapCell)
+            tileType = int(map_cell)
 
         return dict(tileType=tileType, featureType=featureType, value=value, cloudType=cloudType, flowerColor=flowerColor)
 
@@ -110,10 +110,10 @@ class BeeCell(Cell):
                 self.shape(Maze.shapefile("purple_flower"))
             else:
                 self.shape(Maze.shapefile("red_flower"))
-            self.drawValue()
+            self.draw_value()
         elif (self.isHive()):
             self.shape(Maze.shapefile("honeycomb"))
-            self.drawValue()
+            self.draw_value()
 
     def isCloud(self):
         return self.cloudType != CloudType.NONE

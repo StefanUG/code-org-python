@@ -33,15 +33,15 @@ class ZombieCell(Cell):
         self.redraw()
 
     def redraw(self):
-        if (self.isObstacle()):
+        if (self.is_obstacle()):
             self.shape(Maze.shapefile("obstacle"))
             self.showturtle()
-        elif (self.isFinish()):
+        elif (self.is_finish()):
             self.shape(Maze.shapefile("flower"))
             self.showturtle()
 
     def needs_visit(self):
-        return self.isFinish()
+        return self.is_finish()
 
 
 class ZombiePlayer(Player):
