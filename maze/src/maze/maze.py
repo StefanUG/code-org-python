@@ -87,6 +87,9 @@ class Cell(turtle.Turtle):
 
         self.hideturtle()
 
+    def is_variable_range(self):
+        return self.value == self.originalValue and self.range != self.originalValue
+
     def draw(self, x, y):
         self.x = x
         self.y = y
@@ -94,12 +97,16 @@ class Cell(turtle.Turtle):
         self.goto(x, y)
 
     def draw_value(self):
+        value = abs(self.value)
+        if self.is_variable_range():
+            value = '?'
+
         delay = self.getscreen().delay()
         if delay:
             self.getscreen().tracer(0, 0)
         self.clear()
         self.setpos(self.x + 20, self.y - 20)
-        self.write(self.value, False, align="right", font=("Arial", 18, "bold"))
+        self.write(value, False, align="right", font=("Arial", 18, "bold"))
         self.setpos(self.x, self.y)
         if delay:
             self.getscreen().tracer(_TRACER_N, delay)
@@ -202,18 +209,29 @@ class MazeType:
 
     def setup(self, level, screen):
         """
-    Method is called before starting to render and setup the Maze
-    """
+        Method is called before starting to render and setup the Maze
+        """
 
     def after_move(self, maze):
         """
-    Method is called after each move, to handle any actions that are needed
-    """
+        Method is called after each move, to handle any actions that are needed
+        """
+        if hasattr(self.cellClass,"reveal"):
+            coords = maze.player.gridcoords()
+            maze.getCell((coords[0], coords[1])).reveal()
+            if coords[1] > 0:  # reveal above
+                maze.getCell((coords[0], coords[1] - 1)).reveal()
+            if coords[0] > 0:  # reveal left
+                maze.getCell((coords[0] - 1, coords[1])).reveal()
+            if coords[1] < len(maze.grid) - 1:  # reveal below
+                maze.getCell((coords[0], coords[1] + 1)).reveal()
+            if coords[0] < len(maze.grid[coords[1]]) - 1:  # reveal right
+                maze.getCell((coords[0] + 1, coords[1])).reveal()
 
     def parse_cell_from_old_values(self, map_cell, initial_dirt_cell):
         """
-    Simplest method to parse the cell
-    """
+        Simplest method to parse the cell
+        """
         map_cell = str(map_cell)
         if initial_dirt_cell:
             initial_dirt_cell = int(initial_dirt_cell)
@@ -222,6 +240,12 @@ class MazeType:
         value = initial_dirt_cell
 
         return dict(tileType=tile_type, value=value)
+
+    def success(self, maze, player):
+        player._success()
+
+    def failure(self, maze, player):
+        player._fail()
 
 
 class Maze:
@@ -235,14 +259,14 @@ class Maze:
 
     @staticmethod
     def shapefile(name: str, ext: str = ".gif") -> str:
-        name = os.path.join(Maze.instance.mazeType.subfolder, name)
+        name = os.path.join(Maze.instance.maze_type.subfolder, name)
         return os.path.join(_DIR_PATH, "images", name + ext)
 
     instance = None
 
     def __init__(self, level: dict, maze_type: MazeType):
         Maze.instance: Maze = self
-        self.mazeType: MazeType = maze_type
+        self.maze_type: MazeType = maze_type
 
         self.screen = turtle.Screen()
         self.walls = []
@@ -281,7 +305,7 @@ class Maze:
             row = []
             parsed_maze.append(row)
             for c in range(len(maze[r])):
-                cell = self.mazeType.parse_cell_from_old_values(maze[r][c], initialDirt[r][c] if initialDirt else None)
+                cell = self.maze_type.parse_cell_from_old_values(maze[r][c], initialDirt[r][c] if initialDirt else None)
                 row.append(cell)
 
         return parsed_maze
@@ -308,15 +332,15 @@ class Maze:
                 if (self.width == 0):
                     self.width = cols * 50
 
-                cell = self.mazeType.new_cell(maze[y][x])
+                cell = self.maze_type.new_cell(maze[y][x])
                 row.append(cell)
 
                 screen_x = -1 * ((self.width / 2) - 25) + (x * 50)
                 screen_y = (self.height / 2 - 25) - (y * 50)
 
                 if (cell.tileType.is_open()):
-                    if (self.mazeType.path()):
-                        self.mazeType.path().draw(screen_x, screen_y)
+                    if (self.maze_type.path()):
+                        self.maze_type.path().draw(screen_x, screen_y)
                     if (cell.needs_visit()):
                         self.cells_to_visit.append(cell)
 
@@ -328,9 +352,10 @@ class Maze:
                 if (cell.tileType.is_start()):
                     self.startCell = cell
 
+        self.maze_type.path().hideturtle()
         Cell.sort_list(self.cells_to_visit)
 
-        self.player = self.mazeType.new_player(self)
+        self.player = self.maze_type.new_player(self)
         self.player._turtle.goto(self.startCell.x, self.startCell.y)
 
         dir = levelProps.get("start_direction")
@@ -347,15 +372,22 @@ class Maze:
             self.visited.append(cell)
             Cell.sort_list(self.visited)
 
-        self.mazeType.after_move(self)
+        self.maze_type.after_move(self)
 
         self.pen.tick()
 
     def done(self):
         if self.detectWinScenario():
-            self.player._success()
+            self._success()
         else:
-            self.player._fail(False)
+            self._fail()
+
+    def _success(self):
+        self.maze_type.success(self, self.player)
+
+
+    def _fail(self):
+        self.maze_type.failure(self, self.player)
 
     def detectWinScenario(self):
         if all(element in self.visited for element in self.cells_to_visit):
@@ -366,7 +398,7 @@ class Maze:
     def get_cell_values(self):
         return functools.reduce(lambda v, cell: v + (cell.value if cell.value else 0), self.visited, 0)
 
-    def getCell(self, gridcoords) -> Cell:
+    def getCell(self, gridcoords: (int, int)) -> Cell:
         row = None
         if len(self.grid) > gridcoords[1] and gridcoords[1] >= 0:
             row = self.grid[gridcoords[1]]
@@ -405,17 +437,17 @@ class Player():
     def gridcoords(self):
         """Return the turtle's current location witin the grid system (col,row), as a Vec2D-vector.
 
-    No arguments.
+        No arguments.
 
-    Example (for a Turtle instance named pegman):
-    >>> pegman.pos()
-    (1, 8)
-    """
+        Example (for a Turtle instance named pegman):
+        >>> pegman.pos()
+        (1, 8)
+        """
         col = round((self.maze.width / 2 + (self._turtle.xcor() - 25)) / 50)
         row = round((self.maze.height / 2 - (self._turtle.ycor() + 25)) / 50)
         return (col, row)
 
-    def _getCurrentCell(self) -> Cell:
+    def _get_current_cell(self) -> Cell:
         return self.maze.getCell(self.gridcoords())
 
     def _check(self):
@@ -435,21 +467,21 @@ class Player():
 
     def _success(self):
         print("success")
-        if (_TRACER_N > 0):
+        if _TRACER_N > 0:
             self.maze.pen.draw_success()
             self._turtle.speed(8)
             self._turtle.right(360)
             self._turtle.left(360)
             self._turtle.getscreen().mainloop()
 
-    def _process(self, cond):
+    def _process(self, cond, deduct=1):
         color = self._turtle.color()
         self._turtle.color("black", "orange")
-        cell = self._getCurrentCell()
-        if (cond(cell)):
-            if (cell.value <= 0):
+        cell = self._get_current_cell()
+        if cond(cell):
+            if (deduct > 0 >= cell.value) or (deduct < 0 <= cell.value):
                 self._fail()
-            cell.value -= 1
+            cell.value -= deduct
             cell.redraw()
         else:
             self._fail()
@@ -457,15 +489,20 @@ class Player():
         self._turtle.color(color[0], color[1])
 
     def _get_value_if(self, cellCond):
-        cell = self._getCurrentCell()
+        cell = self._get_current_cell()
         value = 0
-        if (cellCond(cell)):
+        if cellCond(cell):
             value = cell.value
         return value
 
     def forward(self, steps=1):
         for i in range(steps):
             self._turtle.forward(50)
+            self._check()
+
+    def backward(self, steps=1):
+        for i in range(steps):
+            self._turtle.backward(50)
             self._check()
 
     move_forward = forward

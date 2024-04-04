@@ -1,10 +1,11 @@
 from enum import Enum
 import random
 from .maze import SquareType, MazeType, Cell, Player, Maze
+from .farmer import FarmerMazeType
 
 
 class BeeMazeType(MazeType):
-  
+
     def __init__(self):
         super().__init__()
         self.cellClass = BeeCell
@@ -19,19 +20,6 @@ class BeeMazeType(MazeType):
         screen.register_shape(Maze.shapefile("purple_flower"))
         screen.register_shape(Maze.shapefile("red_flower"))
         screen.register_shape(Maze.shapefile("honeycomb"))
-        
-    def after_move(self, maze):
-        super().after_move(maze)
-        coords = maze.player.gridcoords()
-        maze.getCell((coords[0], coords[1])).reveal()
-        if (coords[1] > 0): # reveal above
-            maze.getCell((coords[0], coords[1]-1)).reveal()
-        if (coords[0] > 0): # reveal left
-            maze.getCell((coords[0]-1, coords[0])).reveal()
-        if (coords[1] < len(maze.grid)-1): # reveal below
-            maze.getCell((coords[0], coords[1]+1)).reveal()
-        if (coords[0] < len(maze.grid[coords[1]])-1): # reveal right
-            maze.getCell((coords[0]+1, coords[1])).reveal()
 
     def parse_cell_from_old_values(self, map_cell, initial_dirt_cell):
         map_cell = str(map_cell)
@@ -52,11 +40,16 @@ class BeeMazeType(MazeType):
         else:
             tileType = int(map_cell)
 
-        return dict(tileType=tileType, featureType=featureType, value=value, cloudType=cloudType, flowerColor=flowerColor)
+        return dict(tileType=tileType, featureType=featureType, value=value, cloudType=cloudType,
+                    flowerColor=flowerColor)
 
 
+BEE_SHAPE = ((0, -22), (-4, -20), (-7, -13), (7, -13), (-7, -13), (-7.6, -5.6), (7.6, -5.6), (-7.6, -5.6), (-2.6, 7.4),
+             (-13.1, -10.5), (-18, -13), (-23, -11), (-25, -6), (-23, -1), (-2.6, 7.5), (-7, 9), (-6, 15), (-4, 17),
+             (-7, 20), (-11, 22), (-7, 20), (-4, 17), (0, 18), (4, 17), (7, 20), (11, 22), (7, 20), (4, 17), (6, 15),
+             (7, 9), (2.6, 7.5), (23, -1), (25, -6), (23, -11), (18, -13), (13.1, -10.5), (2.6, 7.4), (7.6, -5.6),
+             (7, -13), (4, -20))
 
-BEE_SHAPE = ((0,-22),(-4,-20),(-7,-13),(7,-13),(-7,-13),(-7.6,-5.6),(7.6,-5.6),(-7.6,-5.6),(-2.6,7.4),(-13.1,-10.5),(-18,-13),(-23,-11),(-25,-6),(-23,-1),(-2.6,7.5),(-7,9),(-6,15),(-4,17),(-7,20),(-11,22),(-7,20),(-4,17),(0,18),(4,17),(7,20),(11,22),(7,20),(4,17),(6,15),(7,9),(2.6,7.5),(23,-1),(25,-6),(23,-11),(18,-13),(13.1,-10.5),(2.6,7.4),(7.6,-5.6),(7,-13),(4,-20))
 
 class BeeFeatureType(Enum):
     NONE = None
@@ -64,30 +57,33 @@ class BeeFeatureType(Enum):
     FLOWER = 1
     VARIABLE = 2
 
+
 class CloudType(Enum):
     NONE = None
-    STATIC = 0 
+    STATIC = 0
     HIVE_OR_FLOWER = 1
     FLOWER_OR_NOTHING = 2
     HIVE_OR_NOTHING = 3
     ANY = 4
+
 
 class FlowerColor(Enum):
     DEFAULT = None
     RED = 0
     PURPLE = 1
 
+
 class BeeCell(Cell):
 
-    def __init__(self,tileType=0, value=0, range=0,featureType=None,flowerColor=None,cloudType=None):
+    def __init__(self, tileType=0, value=0, range=0, featureType=None, flowerColor=None, cloudType=None):
         super().__init__(tileType=tileType, value=value, range=range)
         self.featureType = BeeFeatureType(featureType)
         self.flowerColor = FlowerColor(flowerColor)
-        self.cloudType   = CloudType(cloudType)
+        self.cloudType = CloudType(cloudType)
 
     def draw(self, x, y):
         super().draw(x, y)
-        if (not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
+        if not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE):
             self.value = 0
         self.redraw()
 
@@ -98,45 +94,45 @@ class BeeCell(Cell):
         return self.featureType == BeeFeatureType.HIVE
 
     def redraw(self):
-        if (self.isCloud() or self.featureType not in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE)):
+        if self.isCloud() or self.featureType not in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE):
             self.showturtle()
         else:
             self.hideturtle()
-    
-        if (self.cloudType != CloudType.NONE):
+
+        if self.cloudType != CloudType.NONE:
             self.shape(Maze.shapefile("cloud"))
-        elif (self.isFlower()):
-            if (self.flowerColor != FlowerColor.RED):
+        elif self.isFlower():
+            if self.flowerColor != FlowerColor.RED:
                 self.shape(Maze.shapefile("purple_flower"))
             else:
                 self.shape(Maze.shapefile("red_flower"))
             self.draw_value()
-        elif (self.isHive()):
+        elif self.isHive():
             self.shape(Maze.shapefile("honeycomb"))
             self.draw_value()
 
     def isCloud(self):
         return self.cloudType != CloudType.NONE
-  
+
     def needs_visit(self):
         return self.isCloud() or self.isFlower() or self.isHive()
-  
+
     def reveal(self):
         possibilities = None
-        if (self.isCloud()):
-            if (self.cloudType == CloudType.HIVE_OR_FLOWER):
+        if self.isCloud():
+            if self.cloudType == CloudType.HIVE_OR_FLOWER:
                 possibilities = [BeeFeatureType.HIVE, BeeFeatureType.FLOWER]
-            elif (self.cloudType == CloudType.FLOWER_OR_NOTHING):
+            elif self.cloudType == CloudType.FLOWER_OR_NOTHING:
                 possibilities = [BeeFeatureType.FLOWER, BeeFeatureType.FLOWER, BeeFeatureType.NONE]
-            elif (self.cloudType == CloudType.HIVE_OR_NOTHING):
+            elif self.cloudType == CloudType.HIVE_OR_NOTHING:
                 possibilities = [BeeFeatureType.HIVE, BeeFeatureType.HIVE, BeeFeatureType.NONE]
-            elif (self.cloudType == CloudType.ANY):
+            elif self.cloudType == CloudType.ANY:
                 possibilities = [BeeFeatureType.NONE, BeeFeatureType.HIVE, BeeFeatureType.FLOWER]
 
-            if (possibilities):
+            if possibilities:
                 self.featureType = random.choice(possibilities)
 
-            if (self.featureType == BeeFeatureType.NONE):
+            if self.featureType == BeeFeatureType.NONE:
                 # When there is no feature type, set the value to 0 so that 
                 # we can detect the win condition properly
                 self.value = 0
@@ -156,16 +152,15 @@ class BeePlayer(Player):
 
         screen.register_shape("bee", BEE_SHAPE)
 
-        self._turtle.color("black","yellow")
+        self._turtle.color("black", "yellow")
         self._turtle.shape("bee")
 
-
     def at_flower(self):
-        return self._getCurrentCell().isFlower()
+        return self._get_current_cell().isFlower()
 
     def at_honeycomb(self):
-        return self._getCurrentCell().isHive()
-  
+        return self._get_current_cell().isHive()
+
     def nectar(self):
         return self._get_value_if(lambda cell: cell.isFlower())
 
