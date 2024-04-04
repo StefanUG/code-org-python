@@ -1,7 +1,7 @@
-from maze import Puzzle
+from maze import Puzzle, BeePlayer
 
 maze = Puzzle.from_file("courseD_bee_conditionals_challenge2_2023")
-bee = maze.player
+bee: BeePlayer = maze.player
 
 '''
 https://studio.code.org/s/coursed-2023/lessons/14/levels/15
