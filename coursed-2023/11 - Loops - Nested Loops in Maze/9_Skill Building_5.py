@@ -1,7 +1,7 @@
-from maze import Puzzle
+from maze import Puzzle, ZombiePlayer
 
 maze = Puzzle.from_file("courseD_maze_nestedLoops6_2023")
-zombie = maze.player
+zombie: ZombiePlayer = maze.player
 
 '''
 https://studio.code.org/s/coursed-2023/lessons/11/levels/9
