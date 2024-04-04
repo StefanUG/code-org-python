@@ -5,7 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "importer"
 version = "0.1.0"
+dependencies = [
+  "Jinja2"
+]
 
 requires-python = ">=3.10"
-
 
