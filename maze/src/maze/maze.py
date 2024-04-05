@@ -166,11 +166,23 @@ class Direction(Enum):
                 return member
         return None
 
+    def left(self):
+        value = self.value - 1
+        if value < 0:
+            value = 3
+        return Direction(value)
+
+    def right(self):
+        value = self.value + 1
+        if value > 3:
+            value = 0
+        return Direction(value)
+
     def to_heading(self):
         """
     Converts the direction of a Maze level to python turtle "standard" mode
       0 - east      1
-    90 - north     0
+     90 - north     0
     180 - west      3
     270 - south     2
     """
@@ -182,6 +194,20 @@ class Direction(Enum):
             return 180
 
         return 0
+
+    @staticmethod
+    def from_heading(head):
+        """
+        Returns a Direction based on the heading in degrees
+        """
+        if head == 90:
+            return Direction.NORTH
+        elif head == 270:
+            return Direction.SOUTH
+        elif head == 180:
+            return Direction.WEST
+
+        return Direction.EAST
 
 
 class MazeType:
@@ -410,6 +436,19 @@ class Maze:
         cell = self.getCell(gridcoords)
         return cell.tileType.is_wall()
 
+    def is_path_in_heading(self, start_yx, heading):
+        cell: Cell = None
+        if heading == Direction.NORTH.to_heading():
+            cell = self.getCell((start_yx[0], start_yx[1] - 1))
+        elif heading == Direction.EAST.to_heading():
+            cell = self.getCell((start_yx[0] + 1, start_yx[1]))
+        elif heading == Direction.SOUTH.to_heading():
+            cell = self.getCell((start_yx[0], start_yx[1] + 1))
+        elif heading == Direction.WEST.to_heading():
+            cell = self.getCell((start_yx[0] - 1, start_yx[1]))
+
+        return cell is not None and cell.is_open()
+
 
 class Player():
     maze: Maze = None
@@ -517,14 +556,21 @@ class Player():
     def path_ahead(self):
         coords = self.gridcoords()
         head = self._turtle.heading()
-        cell: Cell = None
-        if head == Direction.NORTH.to_heading():
-            cell = self.maze.getCell((coords[0], coords[1] - 1))
-        elif head == Direction.EAST.to_heading():
-            cell = self.maze.getCell((coords[0] + 1, coords[1]))
-        elif head == Direction.SOUTH.to_heading():
-            cell = self.maze.getCell((coords[0], coords[1] + 1))
-        elif head == Direction.WEST.to_heading():
-            cell = self.maze.getCell((coords[0] - 1, coords[1]))
+        return self.maze.is_path_in_heading(coords, head)
 
-        return cell is not None and cell.is_open()
+    def path_left(self):
+        coords = self.gridcoords()
+        d = Direction.from_heading(self._turtle.heading()).left()
+        return self.maze.is_path_in_heading(coords, d.to_heading())
+
+    def path_right(self):
+        coords = self.gridcoords()
+        d = Direction.from_heading(self._turtle.heading()).right()
+        return self.maze.is_path_in_heading(coords, d.to_heading())
+
+    def at_finish(self):
+        """
+        Is the player at the finish point yet?
+        :return:
+        """
+        return self._get_current_cell().is_finish()
