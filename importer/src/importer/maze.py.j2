@@ -1,7 +1,7 @@
-from maze import Puzzle
+from maze import Puzzle, {{player_type}}
 
 maze = Puzzle.from_file("{{levelname}}")
-player = maze.player
+{{player}}: {{player_type}} = maze.player
 
 '''
 https://studio.code.org/s/{{course.key}}/lessons/{{lesson.absolute_position}}/levels/{{level.position}}
@@ -9,12 +9,12 @@ https://studio.code.org/s/{{course.key}}/lessons/{{lesson.absolute_position}}/le
 {{level.config.properties.long_instructions}}
 
 ---
-{{level.config.properties.short_instructions}}
+{{toolbox}}
 '''
 
 # When run
 
-
+{{start_code}}
 
 # Keep this
 Puzzle.done()

@@ -7,10 +7,6 @@ import re
 import jinja2
 from . import convert_level
 
-# Get the directory of the current Python file
-_dir_path = os.path.dirname(os.path.realpath(__file__))
-
-
 def sanitize_filename(filename, replace_spaces=False):
     filename = re.sub(r'[\\/*?:\"<>|]', "-", filename)
     if replace_spaces:
@@ -42,22 +38,6 @@ def find_level_file(levelname, startdir):
 
 def find_course_file(coursename, source_dir):
     return joinpaths(source_dir, "dashboard", "config", "scripts_json", coursename + ".script_json")
-
-
-def create_level_python(level_filename, level_key, course, lesson, level):
-    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(_dir_path))
-    skin = level['config']['properties'].get('skin')
-    if skin and skin in ['pvz', 'bee', 'farmer', 'harvester']:
-        skin = "_" + skin
-    else:
-        skin = ""
-    template = environment.get_template(f"maze{skin}.py.j2")
-    content = template.render(course=course, lesson=lesson, level=level, levelname=level_key)
-    with open(f"{level_filename}.py", mode="w", encoding="utf-8") as file:
-        file.write(content)
-        print(f"Wrote level to {level_filename}.py")
-
-    #
 
 
 # Structure of the code-dot-org course script is:
@@ -107,6 +87,18 @@ def create_level_python(level_filename, level_key, course, lesson, level):
 # code-dot-org/dashboard/config/scripts_json/coursed-2023.script_json
 # code-dot-org/dashboard/config/levels/custom/maze/courseD_bee_conditionals3_2023.level
 
+
+# WIP
+# class Course:
+#
+#     @staticmethod
+#     def from_json(json):
+#
+#
+#     def __init__(self, name: str, family_name: str):
+#         self.name = name
+#         self.family_name = family_name
+#         self.dir_name = sanitize_filename(name.lower())
 
 def generate_courses(coursename, source_dir, target_dir):
     coursefile = find_course_file(coursename, source_dir)
@@ -180,7 +172,7 @@ def generate_courses(coursename, source_dir, target_dir):
                     if cc_license:
 
                         # Directory name for the lesson
-                        course_dirname = f"{args.target_dir}/{lesson_group['seeding_key']['script.name']}"
+                        course_dirname = f"{args.target_dir}/{lesson_group['seeding_key']['script.name']}".lower()
                         lesson_dirname = sanitize_filename(f"{lesson_seq} - {group_name} - {lesson_key}")
                         lesson_dirname = f"{course_dirname}/{lesson_dirname}"
                         levels_dirname = f"{lesson_dirname}/levels"
@@ -215,7 +207,9 @@ def generate_courses(coursename, source_dir, target_dir):
                         #  ]
                         for level in course.get("script_levels"):
                             props = level["properties"]
-                            level_key = level["level_keys"][0]  # TODO, check if there could ever be more
+                            level_key:str = level["level_keys"][0]  # TODO, check if there could ever be more
+                            if level_key.find('courseD_maze_until5_2023') == -1:
+                                continue
                             level_seq = level["position"]
                             level_progression = props.get("progression")
                             section_pos = level["activity_section_position"]
@@ -232,12 +226,9 @@ def generate_courses(coursename, source_dir, target_dir):
                                     print(f"No levefile foud for: {level_key}")
                                     continue
 
-                                print("treating levelfile ", levelfile, leveltype)
                                 if leveltype == 'maze':
-                                    os.makedirs(levels_dirname, exist_ok=True)
-                                    level_config = convert_level.create_level_json(levelfile, levels_dirname)
-                                    level['config'] = level_config[0]
-                                    create_level_python(level_filename, level_key, course, lesson, level)
+                                    convert_level.handle_level(levelfile, leveltype, levels_dirname, level_filename, level_key, course, lesson, level)
+
                                 elif leveltype == 'unplug':
                                     print("unplug levels not yet implemented")
                                 elif leveltype == 'standalone_video':
