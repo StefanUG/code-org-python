@@ -13,7 +13,19 @@ Check underneath every cloud to see if it is hiding a flower before you get nect
 Remember: Not all clouds hide the same thing!
 
 ---
-Check underneath every cloud to see if it is hiding a flower before you get nectar.  
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.right()
+bee.left()
+bee.get_nectar()
+bee.make_honey()
+if bee.at_flower():
+    # Do this
+for i in range(???):
+    # Do this
+```
 '''
 
 # When run

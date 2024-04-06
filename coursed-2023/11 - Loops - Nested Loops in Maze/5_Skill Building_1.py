@@ -9,7 +9,17 @@ https://studio.code.org/s/coursed-2023/lessons/11/levels/5
 This time, help the bee collect all of the nectar using as few blocks as possible.
 
 ---
-This time, help the bee collect all of the nectar using as few blocks as possible.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.right()
+bee.left()
+bee.get_nectar()
+for i in range(5):
+    # Do this
+# 
+```
 '''
 
 # When run

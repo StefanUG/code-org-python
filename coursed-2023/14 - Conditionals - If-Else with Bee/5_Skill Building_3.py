@@ -11,7 +11,19 @@ In this puzzle, we know that every flower has exactly one nectar, but the flower
 Get all of the nectar using as few blocks as possible.
 
 ---
-Get all of the nectar using as few blocks as possible.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.right()
+bee.left()
+bee.get_nectar()
+bee.make_honey()
+if bee.at_flower():
+    # Do this
+for i in range(???):
+    # Do this
+```
 '''
 
 # When run

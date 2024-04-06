@@ -11,7 +11,16 @@ _"This is going to **BEE** great!"_
 Help the bee collect all of the nectar.
 
 ---
-Help the bee collect all of the nectar.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.right()
+bee.left()
+bee.get_nectar()
+for i in range(5):
+    # Do this
+```
 '''
 
 # When run

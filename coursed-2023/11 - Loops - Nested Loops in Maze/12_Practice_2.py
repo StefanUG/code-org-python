@@ -11,7 +11,18 @@ Make all of the honey.
 ![]()
 
 ---
-Make all of the honey.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.left()
+bee.right()
+bee.get_nectar()
+bee.make_honey()
+for i in range(???):
+    # Do this
+# 
+```
 '''
 
 # When run

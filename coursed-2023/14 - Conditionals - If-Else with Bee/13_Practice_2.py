@@ -11,7 +11,21 @@ Conditionals can be helpful, even when you know exactly what is in each spot!
 Collect all of the nectar and make all of the honey.
 
 ---
-Collect all of the nectar and make all of the honey.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.right()
+bee.left()
+bee.get_nectar()
+bee.make_honey()
+if bee.at_flower():
+    # Do this
+else:
+    # Otherwise this
+for i in range(???):
+    # Do this
+```
 '''
 
 # When run

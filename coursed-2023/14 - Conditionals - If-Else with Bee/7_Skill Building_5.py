@@ -11,12 +11,24 @@ https://studio.code.org/s/coursed-2023/lessons/14/levels/7
 Some of these clouds might have honeycombs under them.  Be sure to check if a honeycomb is hiding behind each cloud! If there is a honeycomb, the bee will only need to make honey *once*.
 
 ---
-Some of these clouds might have honeycombs under them.  Be sure to check if a honeycomb is hiding behind each cloud!
+Here are elements from the toolbox.
+You can use them in your code:
+```
+bee.forward()
+bee.right()
+bee.left()
+bee.get_nectar()
+bee.make_honey()
+if bee.at_honeycomb():
+    # Do this
+for i in range(???):
+    # Do this
+```
 '''
 
 # When run
 
-
+# Start
 
 # Keep this
 Puzzle.done()

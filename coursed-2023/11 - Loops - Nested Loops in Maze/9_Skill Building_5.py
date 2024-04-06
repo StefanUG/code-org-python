@@ -11,12 +11,22 @@ https://studio.code.org/s/coursed-2023/lessons/11/levels/9
 Get the zombie to the sunflower using only the blocks available.
 
 ---
-Get the zombie to the sunflower using only the blocks available.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+zombie.forward()
+zombie.left()
+zombie.right()
+for i in range(???):
+    # Do this
+# 
+```
 '''
 
 # When run
 
-
+# Start
+zombie.forward()
 
 # Keep this
 Puzzle.done()
