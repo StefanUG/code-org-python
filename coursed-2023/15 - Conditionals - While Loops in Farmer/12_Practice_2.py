@@ -9,12 +9,27 @@ https://studio.code.org/s/coursed-2023/lessons/15/levels/12
 
 
 ---
-Flatten all of these piles using as few blocks as possible. 
+Here are elements from the toolbox.
+You can use them in your code:
+```
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.remove()
+farmer.fill()
+for i in range(5):
+    # Do this
+while farmer.path_ahead():
+    # Do this
+while farmer.at_pile():
+    # Do this
+# 
+```
 '''
 
 # When run
 
-
+# Start
 
 # Keep this
 Puzzle.done()

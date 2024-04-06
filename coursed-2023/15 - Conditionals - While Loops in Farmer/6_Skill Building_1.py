@@ -11,12 +11,24 @@ https://studio.code.org/s/coursed-2023/lessons/15/levels/6
 Help the farmer remove this entire pile using a `while` loop.
 
 ---
-Help the farmer remove this entire pile using a `while` loop.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.remove()
+farmer.fill()
+for i in range(5):
+    # Do this
+while farmer.at_pile():
+    # Do this
+```
 '''
 
 # When run
 
-
+# Start
 
 # Keep this
 Puzzle.done()

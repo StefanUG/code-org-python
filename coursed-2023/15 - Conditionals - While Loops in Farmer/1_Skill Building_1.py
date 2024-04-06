@@ -11,12 +11,21 @@ https://studio.code.org/s/coursed-2023/lessons/15/levels/1
 Move to the pile of dirt and use the `remove` block to remove it.
 
 ---
-Move to the pile of dirt and use the `remove` block to remove it.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.remove()
+for i in range(5):
+    # Do this
+```
 '''
 
 # When run
 
-
+# Start
 
 # Keep this
 Puzzle.done()

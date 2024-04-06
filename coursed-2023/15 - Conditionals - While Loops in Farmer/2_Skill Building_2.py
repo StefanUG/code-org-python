@@ -9,12 +9,22 @@ https://studio.code.org/s/coursed-2023/lessons/15/levels/2
 
 
 ---
-Move to the hole and fill it with six shovelfuls of dirt, using the `fill` block.
+Here are elements from the toolbox.
+You can use them in your code:
+```
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.remove()
+farmer.fill()
+for i in range(5):
+    # Do this
+```
 '''
 
 # When run
 
-
+# Start
 
 # Keep this
 Puzzle.done()
