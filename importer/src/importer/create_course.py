@@ -208,8 +208,6 @@ def generate_courses(coursename, source_dir, target_dir):
                         for level in course.get("script_levels"):
                             props = level["properties"]
                             level_key:str = level["level_keys"][0]  # TODO, check if there could ever be more
-                            if level_key.find('courseD_maze_until5_2023') == -1:
-                                continue
                             level_seq = level["position"]
                             level_progression = props.get("progression")
                             section_pos = level["activity_section_position"]

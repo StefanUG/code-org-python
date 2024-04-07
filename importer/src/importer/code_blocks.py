@@ -15,13 +15,15 @@ BLOCK_MAPPING = {
     "controls_repeat": "for i in range({{field['TIMES']}}):\n{{statements['DO']}}",
     "comment": "# {{field['TEXT']}}",
 
+    "procedures_defnoreturn": "{{mutation['name']}}()",  # TODO Handler Procedure calls
+
     # Generic Maze blocks
     "maze_untilBlockedOrNotClear": "while {{field['DIR']}}:\n{{statements['DO']}}",
     "maze_moveForward":  "{{player}}.forward()",
     "maze_turn":         "{{player}}.{{field['DIR']}}",
     "maze_untilBlocked": "while {{player}}.path_ahead():\n{{statements['DO']}}",
     "maze_move":         "{{player}}.{{field['DIR']}}",
-    "maze_ifElse":       "if {{player}}.{{field['DIR']}}:\n{{statements['DO']}}\nelse:{{statements['ELSE']}}",
+    "maze_ifElse":       "if {{player}}.{{field['DIR']}}:\n{{statements['DO']}}\nelse:\n{{statements['ELSE']}}",
     "maze_if":           "if {{player}}.{{field['DIR']}}:\n{{statements['DO']}}",
     "maze_forever":      "while not {{player}}.at_finish():\n{{statements['DO']}}",
 
@@ -33,6 +35,9 @@ BLOCK_MAPPING = {
     "harvester_corn":    "{{player}}.pick_corn()",
     "harvester_lettuce": "{{player}}.pick_lettuce()",
     "harvester_pumpkin": "{{player}}.pick_pumpkin()",
+    "harvester_whileHasCrop": "while {{player}}.{{field['LOC']}}:\n{{statements['DO']}}",
+    "harvester_untilHasCrop": "while not {{player}}.{{field['LOC']}}:\n{{statements['DO']}}",
+    "harvester_untilHasPumpkin": "while not {{player}}.at_pumpkin():\n{{statements['DO']}}",
 
     # Bee related
     "maze_honey":  "{{player}}.make_honey()",
@@ -52,11 +57,21 @@ FIELD_MAPPING = {
     "maze_if/isPathForward":     "path_ahead()",
     "maze_if/isPathLeft":        "path_left()",
     "maze_if/isPathRight":       "path_right()",
+
     "maze_ifElse/isPathForward": "path_ahead()",
+    "maze_ifElse/isPathLeft": "path_left()",
+    "maze_ifElse/isPathRight": "path_left()",
 
     "maze_untilBlockedOrNotClear/holePresent": "{{player}}.at_hole()",
     "maze_untilBlockedOrNotClear/pilePresent": "{{player}}.at_pile()",
     "maze_untilBlockedOrNotClear/isPathForward": "{{player}}.path_ahead()",
+
+    "harvester_whileHasCrop/Corn":    "has_corn()",
+    "harvester_whileHasCrop/Pumpkin": "has_pumpkin()",
+    "harvester_whileHasCrop/Lettuce": "has_lettuce()",
+    "harvester_untilHasCrop/Corn":    "has_corn()",
+    "harvester_untilHasCrop/Pumpkin": "has_pumpkin()",
+    "harvester_untilHasCrop/Lettuce": "has_lettuce()",
 
     "bee_whileNectarAmount/nectarRemaining": "{{player}}.nectar()",
     "bee_whileNectarAmount/honeyAvailable":  "{{player}}.honey()",
@@ -106,12 +121,16 @@ def map_block(block_type, field, player, statements=None) -> str:
     return value
 
 
-def generate_toolbox_python(root, player="player"):
+def generate_toolbox_python(root, player="player", skip_wording=False):
     toolbox_blocks_element: ET.Element = root.find("./blocks/toolbox_blocks/xml")
     code = ["Here are elements from the toolbox.\nYou can use them in your code:", "```"]
     if toolbox_blocks_element:
         for block_element in toolbox_blocks_element:
-            code.append(block_to_code(block_element, player))
+            if block_element.tag == "category":
+                code.append(f"# {block_element.attrib.get('name')}")
+                code.append(generate_toolbox_python(block_element, skip_wording=True))
+            else:
+                code.append(block_to_code(block_element, player))
 
     code.append("```")
 
@@ -158,8 +177,5 @@ def block_to_code(block_element, player):
         next_code = generate_python_from_blocks(next_elem, player, 0)
         codeline = "\n".join([codeline, next_code])
 
-    print(f"--- block_to_code({block_element}, {player}):")
-    print(codeline)
-    print('---')
     return codeline
 
