@@ -127,6 +127,12 @@ class Cell(turtle.Turtle):
     def sort_list(the_list):
         the_list.sort(key=lambda cell: (cell.x, cell.y))
 
+    def redraw(self):
+        """
+        Method that will be called when the player moved, so the cell has a chance to redraw itself if needed
+        :return:
+        """
+
 
 class SquareType(Enum):
     WALL = 0
@@ -180,12 +186,12 @@ class Direction(Enum):
 
     def to_heading(self):
         """
-    Converts the direction of a Maze level to python turtle "standard" mode
-      0 - east      1
-     90 - north     0
-    180 - west      3
-    270 - south     2
-    """
+        Converts the direction of a Maze level to python turtle "standard" mode
+          0 - east      1
+         90 - north     0
+        180 - west      3
+        270 - south     2
+        """
         if self == Direction.NORTH:
             return 90
         elif self == Direction.SOUTH:
@@ -225,8 +231,8 @@ class MazeType:
     def new_player(self, maze):
         return self.playerClass(maze)
 
-    def new_cell(self, cellDict) -> Cell:
-        return self.cellClass(**cellDict)
+    def new_cell(self, cell_dict) -> Cell:
+        return self.cellClass(**cell_dict)
 
     def path(self):
         if self._path is None:
@@ -242,17 +248,17 @@ class MazeType:
         """
         Method is called after each move, to handle any actions that are needed
         """
-        if hasattr(self.cellClass,"reveal"):
+        if hasattr(self.cellClass, "reveal"):
             coords = maze.player.gridcoords()
-            maze.getCell((coords[0], coords[1])).reveal()
+            maze.get_cell((coords[0], coords[1])).reveal()
             if coords[1] > 0:  # reveal above
-                maze.getCell((coords[0], coords[1] - 1)).reveal()
+                maze.get_cell((coords[0], coords[1] - 1)).reveal()
             if coords[0] > 0:  # reveal left
-                maze.getCell((coords[0] - 1, coords[1])).reveal()
+                maze.get_cell((coords[0] - 1, coords[1])).reveal()
             if coords[1] < len(maze.grid) - 1:  # reveal below
-                maze.getCell((coords[0], coords[1] + 1)).reveal()
+                maze.get_cell((coords[0], coords[1] + 1)).reveal()
             if coords[0] < len(maze.grid[coords[1]]) - 1:  # reveal right
-                maze.getCell((coords[0] + 1, coords[1])).reveal()
+                maze.get_cell((coords[0] + 1, coords[1])).reveal()
 
     def parse_cell_from_old_values(self, map_cell, initial_dirt_cell):
         """
@@ -319,32 +325,33 @@ class Maze:
 
         self.pen.tick()
 
-    def parse_maze(self, levelProps):
-        maze = json.loads(levelProps["maze"])
-        initial_dirt_matrix = levelProps.get("initial_dirt")
-        initialDirt = None
+    def parse_maze(self, level_props):
+        maze = json.loads(level_props["maze"])
+        initial_dirt_matrix = level_props.get("initial_dirt")
+        initial_dirt = None
         if initial_dirt_matrix:
-            initialDirt = json.loads(initial_dirt_matrix)
+            initial_dirt = json.loads(initial_dirt_matrix)
 
         parsed_maze = []
         for r in range(len(maze)):
             row = []
             parsed_maze.append(row)
             for c in range(len(maze[r])):
-                cell = self.maze_type.parse_cell_from_old_values(maze[r][c], initialDirt[r][c] if initialDirt else None)
+                cell = self.maze_type.parse_cell_from_old_values(maze[r][c],
+                                                                 initial_dirt[r][c] if initial_dirt else None)
                 row.append(cell)
 
         return parsed_maze
 
     def _setup_maze(self, level):
-        levelProps = level['properties']
+        level_props = level['properties']
 
         maze = None
-        if levelProps.get("serialized_maze"):
-            maze = json.loads(levelProps.get("serialized_maze"))
+        if level_props.get("serialized_maze"):
+            maze = json.loads(level_props.get("serialized_maze"))
 
         if not maze:
-            maze = self.parse_maze(levelProps)
+            maze = self.parse_maze(level_props)
 
         rows = len(maze)
         self.height = rows * 50
@@ -355,7 +362,7 @@ class Maze:
             self.grid.append(row)
             cols = len(maze[y])
             for x in range(cols):
-                if (self.width == 0):
+                if self.width == 0:
                     self.width = cols * 50
 
                 cell = self.maze_type.new_cell(maze[y][x])
@@ -364,18 +371,18 @@ class Maze:
                 screen_x = -1 * ((self.width / 2) - 25) + (x * 50)
                 screen_y = (self.height / 2 - 25) - (y * 50)
 
-                if (cell.tileType.is_open()):
-                    if (self.maze_type.path()):
+                if cell.tileType.is_open():
+                    if self.maze_type.path():
                         self.maze_type.path().draw(screen_x, screen_y)
-                    if (cell.needs_visit()):
+                    if cell.needs_visit():
                         self.cells_to_visit.append(cell)
 
                 cell.draw(screen_x, screen_y)
 
-                if (cell.tileType == SquareType.WALL):
+                if cell.tileType == SquareType.WALL:
                     self.walls.append((x, y))
 
-                if (cell.tileType.is_start()):
+                if cell.tileType.is_start():
                     self.startCell = cell
 
         self.maze_type.path().hideturtle()
@@ -384,17 +391,17 @@ class Maze:
         self.player = self.maze_type.new_player(self)
         self.player._turtle.goto(self.startCell.x, self.startCell.y)
 
-        dir = levelProps.get("start_direction")
-        if (dir):
-            dir = Direction(dir)
-            self.player._turtle.setheading(dir.to_heading())
+        direction = level_props.get("start_direction")
+        if direction:
+            direction = Direction(direction)
+            self.player._turtle.setheading(direction.to_heading())
 
         self.update()
 
     def update(self):
         coords = self.player.gridcoords()
-        cell = self.getCell(coords)
-        if (not cell in self.visited):
+        cell = self.get_cell(coords)
+        if not cell in self.visited:
             self.visited.append(cell)
             Cell.sort_list(self.visited)
 
@@ -403,7 +410,7 @@ class Maze:
         self.pen.tick()
 
     def done(self):
-        if self.detectWinScenario():
+        if self.detect_win_scenario():
             self._success()
         else:
             self._fail()
@@ -411,11 +418,10 @@ class Maze:
     def _success(self):
         self.maze_type.success(self, self.player)
 
-
     def _fail(self):
         self.maze_type.failure(self, self.player)
 
-    def detectWinScenario(self):
+    def detect_win_scenario(self):
         if all(element in self.visited for element in self.cells_to_visit):
             value = self.get_cell_values()
             return value == 0
@@ -424,33 +430,33 @@ class Maze:
     def get_cell_values(self):
         return functools.reduce(lambda v, cell: v + (cell.value if cell.value else 0), self.visited, 0)
 
-    def getCell(self, gridcoords: (int, int)) -> Cell:
+    def get_cell(self, gridcoords: (int, int)) -> Cell:
         row = None
-        if len(self.grid) > gridcoords[1] and gridcoords[1] >= 0:
+        if len(self.grid) > gridcoords[1] >= 0:
             row = self.grid[gridcoords[1]]
-        if row is not None and len(row) > gridcoords[0] and gridcoords[0] >= 0:
+        if row is not None and len(row) > gridcoords[0] >= 0:
             return row[gridcoords[0]]
         return None
 
     def is_wall(self, gridcoords):
-        cell = self.getCell(gridcoords)
+        cell = self.get_cell(gridcoords)
         return cell.tileType.is_wall()
 
     def is_path_in_heading(self, start_yx, heading):
         cell: Cell = None
         if heading == Direction.NORTH.to_heading():
-            cell = self.getCell((start_yx[0], start_yx[1] - 1))
+            cell = self.get_cell((start_yx[0], start_yx[1] - 1))
         elif heading == Direction.EAST.to_heading():
-            cell = self.getCell((start_yx[0] + 1, start_yx[1]))
+            cell = self.get_cell((start_yx[0] + 1, start_yx[1]))
         elif heading == Direction.SOUTH.to_heading():
-            cell = self.getCell((start_yx[0], start_yx[1] + 1))
+            cell = self.get_cell((start_yx[0], start_yx[1] + 1))
         elif heading == Direction.WEST.to_heading():
-            cell = self.getCell((start_yx[0] - 1, start_yx[1]))
+            cell = self.get_cell((start_yx[0] - 1, start_yx[1]))
 
         return cell is not None and cell.is_open()
 
 
-class Player():
+class Player:
     maze: Maze = None
     instance = None
 
@@ -484,20 +490,20 @@ class Player():
         """
         col = round((self.maze.width / 2 + (self._turtle.xcor() - 25)) / 50)
         row = round((self.maze.height / 2 - (self._turtle.ycor() + 25)) / 50)
-        return (col, row)
+        return col, row
 
     def _get_current_cell(self) -> Cell:
-        return self.maze.getCell(self.gridcoords())
+        return self.maze.get_cell(self.gridcoords())
 
     def _check(self):
-        if (self.maze.is_wall(self.gridcoords())):
+        if self.maze.is_wall(self.gridcoords()):
             self._fail()
 
         self.maze.update()
 
     def _fail(self, undo=True):
         print("fail")
-        if (_TRACER_N > 0):
+        if _TRACER_N > 0:
             if (undo):
                 self._turtle.undo()
             self._turtle.color("black", "red")
@@ -527,10 +533,10 @@ class Player():
 
         self._turtle.color(color[0], color[1])
 
-    def _get_value_if(self, cellCond):
+    def _get_value_if(self, cell_condition):
         cell = self._get_current_cell()
         value = 0
-        if cellCond(cell):
+        if cell_condition(cell):
             value = cell.value
         return value
 

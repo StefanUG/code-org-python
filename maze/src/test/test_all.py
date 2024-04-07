@@ -13,7 +13,7 @@ def run_script(script_path):
 
 def visit_dir(dir):
     for file in os.listdir(dir):
-        if (os.path.isdir(file)):
+        if os.path.isdir(file):
             visit_dir(os.path.join(dir, file))
         elif file.endswith(".py") and dir != ".":
             run_script(os.path.join(dir, file))
