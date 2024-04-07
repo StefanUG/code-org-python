@@ -33,8 +33,8 @@ class Puzzle:
     mazeTypes = {
         "bee": BeeMazeType(),
         "pvz": ZombieMazeType(),
-        "farmer": FarmerMazeType(),
-        "harvester": FarmerMazeType()
+        "farmer": FarmerMazeType("farmer"),
+        "harvester": FarmerMazeType("harvester")
     }
 
     @staticmethod

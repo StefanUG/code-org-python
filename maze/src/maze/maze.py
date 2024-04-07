@@ -346,6 +346,12 @@ class Maze:
     def _setup_maze(self, level):
         level_props = level['properties']
 
+        step_speed = level_props.get("step_speed")
+
+        if step_speed and not _TESTMODE:
+            global _TRACER_DELAY
+            _TRACER_DELAY = 15 / int(step_speed)
+
         maze = None
         if level_props.get("serialized_maze"):
             maze = json.loads(level_props.get("serialized_maze"))

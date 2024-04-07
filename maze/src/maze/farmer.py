@@ -18,14 +18,16 @@ class HarvesterFeatureType(Enum):
 
 class FarmerMazeType(MazeType):
 
-    def __init__(self):
+    def __init__(self, skin):
         super().__init__()
+        self.skin = skin
         self.cellClass = FarmerCell
         self.playerClass = Farmer
         self.subfolder = "farmer"
 
     def setup(self, level, screen):
         super().setup(level, screen)
+        FarmerCell.skin = self.skin
         screen.bgpic(Maze.shapefile("background", ".png"))
         screen.register_shape(Maze.shapefile("path"))
         screen.register_shape(Maze.shapefile("sprout"))
@@ -42,8 +44,17 @@ class FarmerMazeType(MazeType):
 
 class FarmerCell(Cell):
 
+    skin = None
+
     def __init__(self, tileType=0, value=0, range=0, featureType=0, possibleFeatures: list = None, startsHidden=False):
         super().__init__(tileType=tileType, value=value, range=range)
+
+        if FarmerCell.skin == "farmer":
+            # The harvester feature types do not apply to the farmer
+            self.feature_type = HarvesterFeatureType.NONE
+            self.starts_hidden = False
+            return
+
         self.feature_type = HarvesterFeatureType(featureType)
 
         if type(possibleFeatures) is list:
@@ -164,3 +175,24 @@ class Farmer(Player):
 
     def at_hole(self):
         return self._get_current_cell().is_hole()
+
+    def at_corn(self):
+        return self._get_current_cell().is_corn()
+
+    def at_pumpkin(self):
+        return self._get_current_cell().is_pumpkin()
+
+    def at_lettuce(self):
+        return self._get_current_cell().is_lettuce()
+
+    def has_corn(self):
+        cell: FarmerCell = self._get_current_cell()
+        return cell.is_corn() and cell.value > 0
+
+    def has_pumpkin(self):
+        cell: FarmerCell = self._get_current_cell()
+        return cell.is_pumpkin() and cell.value > 0
+
+    def has_lettuce(self):
+        cell: FarmerCell = self._get_current_cell()
+        return cell.is_lettuce() and cell.value > 0
