@@ -50,7 +50,7 @@ _DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 SKIN_PLAYER = {
     'pvz': ('zombie', 'ZombiePlayer'),
-    'harvester': ('farmer', 'Farmer'),
+    'harvester': ('farmer', 'Harvester'),
     'farmer': ('farmer', 'Farmer'),
     'bee': ('bee', 'BeePlayer')
 }
