@@ -1,7 +1,7 @@
-from maze import Puzzle, Farmer
+from maze import Puzzle, Harvester
 
 maze = Puzzle.from_file("courseE_farmer_ramp12e_2023")
-farmer: Farmer = maze.player
+farmer: Harvester = maze.player
 
 '''
 https://studio.code.org/s/coursee-2023/lessons/13/levels/13
