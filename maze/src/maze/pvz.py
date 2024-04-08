@@ -6,7 +6,6 @@ from .maze import SquareType, MazeType, Cell, Player, Maze
 ZOMBIE_SHAPE = ((0,-15),(-5,-13),(-9,-8),(-9, 0),(-7, 5),(-9, 0),(-9,-8),(-5,-13),(-15,-12),(-19,-9),(-19,0),(-16,9),(-7,5),(-16,9),(-15,13),(-9,13),(-7,11),(-7,5),(0,8),(7,5),(7,11),(9,13),(15,13),(16,9),(7,5),(16,9),(19,0),(19,-9),(15,-12),(5,-13),(9,-8),(9, 0),(7, 5),(9, 0),(9,-8),(5,-13),(0,-15))
 
 
-
 class ZombieMazeType(MazeType):
   
     def __init__(self):
@@ -33,10 +32,10 @@ class ZombieCell(Cell):
         self.redraw()
 
     def redraw(self):
-        if (self.is_obstacle()):
+        if self.is_obstacle():
             self.shape(Maze.shapefile("obstacle"))
             self.showturtle()
-        elif (self.is_finish()):
+        elif self.is_finish():
             self.shape(Maze.shapefile("flower"))
             self.showturtle()
 
@@ -56,3 +55,7 @@ class ZombiePlayer(Player):
         self._turtle.color("brown","green")
         self._turtle.shape("zombie")
 
+    def _check(self):
+        super()._check()
+        if self._get_current_cell().is_finish():
+            self._success()

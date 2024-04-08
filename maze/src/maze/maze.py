@@ -504,6 +504,8 @@ class Player:
     def _check(self):
         if self.maze.is_wall(self.gridcoords()):
             self._fail()
+        if self._get_current_cell().is_obstacle():
+            self._fail()
 
         self.maze.update()
 
