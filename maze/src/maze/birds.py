@@ -66,8 +66,3 @@ class Bird(Player):
 
         self._turtle.color("black","red")
         self._turtle.shape("bird")
-
-    def _check(self):
-        super()._check()
-        if self._get_current_cell().is_finish():
-            self._success()
