@@ -42,7 +42,14 @@ Specific mentions should go to the following for the bits I used.
 * Evil Flower obstacle from: [Bevouliin Free sprite sheets - Plant Monster](https://opengameart.org/content/bevouliin-free-sprite-sheets-plant-monster)
 * Sunflower from [Plants and Flowers - Pixel Art](https://opengameart.org/content/plants-and-flowers-pixel-art)
 
-### Farmer aka. Harvester
+### Farmer and Harvester
 
 * Crops from [LPC Crops](https://opengameart.org/content/lpc-crops)
 * Background from [LPC Farming tilesets, magic animations and UI elements](https://opengameart.org/content/lpc-farming-tilesets-magic-animations-and-ui-elements)
+
+### Birds
+
+* Grass background, same as Bee
+* "Pig" monster from [Fat Green Monster Sprites](https://opengameart.org/content/fat-green-monster-sprites)
+* Walls from [Platformer Tiles](https://opengameart.org/content/platformer-tiles) and [Shape Characters](https://opengameart.org/content/shape-characters)
+* TNT from [Wooden Boxes Crates](https://opengameart.org/content/wooden-boxes-crates)
