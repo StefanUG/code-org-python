@@ -52,7 +52,8 @@ SKIN_PLAYER = {
     'pvz': ('zombie', 'ZombiePlayer'),
     'harvester': ('farmer', 'Harvester'),
     'farmer': ('farmer', 'Farmer'),
-    'bee': ('bee', 'BeePlayer')
+    'bee': ('bee', 'BeePlayer'),
+    'birds': ('bird', 'Bird')
 }
 
 

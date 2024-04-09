@@ -54,6 +54,7 @@ class Wall(turtle.Turtle):
 
 class Path(turtle.Turtle):
     def __init__(self):
+        self._stamp = True
         turtle.Turtle.__init__(self)
         self.setheading(90)
         self.shape(Maze.shapefile("path"))
@@ -65,7 +66,10 @@ class Path(turtle.Turtle):
         self.x = x
         self.y = y
         self.goto(x, y)
-        self.stamp()
+        if self._stamp:
+            self.stamp()
+        else:
+            self.hideturtle()
 
 
 class Cell(turtle.Turtle):
@@ -95,6 +99,7 @@ class Cell(turtle.Turtle):
         self.y = y
 
         self.goto(x, y)
+        self.redraw()
 
     def draw_value(self):
         value = abs(self.value)
@@ -113,6 +118,9 @@ class Cell(turtle.Turtle):
 
     def needs_visit(self):
         return self.tileType.is_open()
+
+    def is_wall(self):
+        return self.tileType.is_wall()
 
     def is_open(self):
         return self.tileType.is_open()
@@ -227,6 +235,7 @@ class MazeType:
         self.playerClass = Player
 
         self._path = None
+        self._wall = None
 
     def new_player(self, maze):
         return self.playerClass(maze)
@@ -238,6 +247,14 @@ class MazeType:
         if self._path is None:
             self._path = self.pathClass()
         return self._path
+
+    def wall(self):
+        """
+        Default implementation is to return the `self._wall` instance, even if it is `None`
+        A subclass can choose to instantiate a wall if they need it.
+        :return:
+        """
+        return self._wall
 
     def setup(self, level, screen):
         """

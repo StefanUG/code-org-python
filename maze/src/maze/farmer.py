@@ -34,10 +34,6 @@ class FarmerCell(Cell):
     def __init__(self, tileType=0, value=0, range=0, featureType=0):
         super().__init__(tileType=tileType, value=value, range=range)
 
-    def draw(self, x, y):
-        super().draw(x, y)
-        self.redraw()
-
     def redraw(self):
         if self.value != 0:
             if self.is_hole():

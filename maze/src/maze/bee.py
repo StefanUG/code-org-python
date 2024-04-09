@@ -82,10 +82,9 @@ class BeeCell(Cell):
         self.cloudType = CloudType(cloudType)
 
     def draw(self, x, y):
-        super().draw(x, y)
         if not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE):
             self.value = 0
-        self.redraw()
+        super().draw(x, y)
 
     def isFlower(self):
         return self.featureType == BeeFeatureType.FLOWER

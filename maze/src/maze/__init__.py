@@ -3,5 +3,6 @@ from .bee import BeeMazeType, BeeFeatureType, BeeCell, BeePlayer, CloudType, Flo
 from .pvz import ZombieMazeType, ZombieCell, ZombiePlayer
 from .farmer import FarmerMazeType, FarmerCell, Farmer
 from .harvester import HarvesterMazeType, HarvesterCell, Harvester
+from .birds import BirdsMazeType, BirdsCell, Bird
 from .puzzle import Puzzle
 from .screencapture import capture

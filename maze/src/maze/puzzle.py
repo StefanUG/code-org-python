@@ -7,6 +7,7 @@ from .bee import BeeMazeType
 from .pvz import ZombieMazeType
 from .farmer import FarmerMazeType
 from .harvester import HarvesterMazeType
+from .birds import BirdsMazeType
 
 # Get the directory of the Python file being run
 _script_path = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -35,7 +36,8 @@ class Puzzle:
         "bee": BeeMazeType(),
         "pvz": ZombieMazeType(),
         "farmer": FarmerMazeType(),
-        "harvester": HarvesterMazeType()
+        "harvester": HarvesterMazeType(),
+        "birds": BirdsMazeType()
     }
 
     @staticmethod

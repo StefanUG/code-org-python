@@ -54,10 +54,6 @@ class HarvesterCell(Cell):
 
         self.starts_hidden = startsHidden
 
-    def draw(self, x, y):
-        super().draw(x, y)
-        self.redraw()
-
     def redraw(self):
         if self.starts_hidden:
             self.shape(Maze.shapefile("sprout"))
