@@ -62,8 +62,9 @@ class CollectorPath(turtle.Turtle):
 
 class CollectorCell(Cell):
 
-    def __init__(self,tileType=0, value=0, range=0):
+    def __init__(self,tileType=0, value=0, range=0, featureType=None):
         super().__init__(tileType=tileType, value=value, range=range)
+        # Some levels have featureType in the serialized_maze field, even though Collector does not use it for anything
 
     def redraw(self):
         if self.is_wall():
