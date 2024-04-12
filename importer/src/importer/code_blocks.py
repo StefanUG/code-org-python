@@ -155,7 +155,7 @@ def generate_toolbox_python(root, player="player", skip_wording=False):
         for block_element in toolbox_blocks_element:
             if block_element.tag == "category":
                 code.append(f"\n#\n# {block_element.attrib.get('name')}\n")
-                code.append(generate_toolbox_python(block_element, skip_wording=True))
+                code.append(generate_toolbox_python(block_element, player, skip_wording=True))
             else:
                 code.append(block_to_code(block_element, player))
 
@@ -215,6 +215,11 @@ def block_to_code(block_element, player):
             next_elem = child
 
     codeline = map_block(block_type, field, player, statements, mutation)
+
+    if limit:
+        lines = codeline.split("\n")
+        lines[0] += f" # limit: {limit}"
+        codeline = "\n".join(lines)
 
     if next_elem:
         next_code = generate_python_from_blocks(next_elem, player, 0)
