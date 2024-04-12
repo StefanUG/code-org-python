@@ -12,7 +12,7 @@ Move forward until you get to the lettuce, then turn left **if** there is a path
 Here are elements from the toolbox.
 You can use them in your code:
 ```
-farmer.forward()
+farmer.forward() # limit: 1
 farmer.right()
 farmer.left()
 farmer.pick_lettuce()
