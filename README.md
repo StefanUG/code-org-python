@@ -53,3 +53,7 @@ Specific mentions should go to the following for the bits I used.
 * "Pig" monster from [Fat Green Monster Sprites](https://opengameart.org/content/fat-green-monster-sprites)
 * Walls from [Platformer Tiles](https://opengameart.org/content/platformer-tiles) and [Shape Characters](https://opengameart.org/content/shape-characters)
 * TNT from [Wooden Boxes Crates](https://opengameart.org/content/wooden-boxes-crates)
+
+### Collector
+
+* Walls, Floor and Gem from [Dungeon Crawl 32x32 tiles](https://opengameart.org/content/dungeon-crawl-32x32-tiles)
