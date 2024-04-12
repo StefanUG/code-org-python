@@ -49,11 +49,13 @@ def extract_level_json(levelfile, root, target_dir):
 _DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 SKIN_PLAYER = {
+    # '[SKIN NAME]', ('[VARIABLE NAME IN PY]', '[CLASS NAME IN PY]')
     'pvz': ('zombie', 'ZombiePlayer'),
     'harvester': ('farmer', 'Harvester'),
     'farmer': ('farmer', 'Farmer'),
     'bee': ('bee', 'BeePlayer'),
-    'birds': ('bird', 'Bird')
+    'birds': ('bird', 'Bird'),
+    'collector': ('collector', 'Collector')
 }
 
 

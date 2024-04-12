@@ -51,9 +51,11 @@ BLOCK_MAPPING = {
     # Bee related
     "maze_honey":  "{{player}}.make_honey()",
     "maze_nectar": "{{player}}.get_nectar()",
-    "bee_whileNectarAmount": "while {{field['ARG1']}} {{field['OP']}} {{field['ARG2']}}:",
+    "bee_whileNectarAmount": "while {{field['ARG1']}} {{field['OP']}} {{field['ARG2']}}:\n{{statements['DO']}}",
     "bee_ifFlower":     "if {{player}}.{{field['LOC']}}:\n{{statements['DO']}}",
     "bee_ifElseFlower": "if {{player}}.{{field['LOC']}}:\n{{statements['DO']}}\nelse:\n{{statements['ELSE']}}",
+
+    "collector_collect": "{{player}}.collect()"
 }
 # Aliases
 BLOCK_MAPPING["controls_repeat_dropdown"] = BLOCK_MAPPING['controls_repeat']
