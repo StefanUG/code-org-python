@@ -19,8 +19,9 @@ class HarvesterMazeType(MazeType):
         self.playerClass = Harvester
         self.subfolder = "farmer"
 
-    def setup(self, level, screen):
-        super().setup(level, screen)
+    def setup(self, level, maze):
+        super().setup(level, maze)
+        screen = maze.screen
         screen.bgpic(Maze.shapefile("background", ".png"))
         screen.register_shape(Maze.shapefile("path"))
         screen.register_shape(Maze.shapefile("sprout"))

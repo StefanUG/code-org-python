@@ -14,7 +14,7 @@ Move to the pile of dirt and use the `remove` block to remove it.
 Here are elements from the toolbox.
 You can use them in your code:
 ```
-farmer.forward()
+farmer.forward() # limit: 1
 farmer.right()
 farmer.left()
 farmer.remove()

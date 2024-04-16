@@ -17,8 +17,9 @@ class FarmerMazeType(MazeType):
         self.playerClass = Farmer
         self.subfolder = "farmer"
 
-    def setup(self, level, screen):
-        super().setup(level, screen)
+    def setup(self, level, maze):
+        super().setup(level, maze)
+        screen = maze.screen
         screen.bgpic(Maze.shapefile("background", ".png"))
         screen.register_shape(Maze.shapefile("path"))
         screen.register_shape(Maze.shapefile("hole"))
@@ -31,7 +32,7 @@ class FarmerMazeType(MazeType):
 
 class FarmerCell(Cell):
 
-    def __init__(self, tileType=0, value=0, range=0, featureType=0):
+    def __init__(self, tileType=0, value=0, range=0, featureType=0, possibleFeatures: list = None, startsHidden=False):
         super().__init__(tileType=tileType, value=value, range=range)
 
     def redraw(self):

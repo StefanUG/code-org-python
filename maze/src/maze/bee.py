@@ -12,8 +12,9 @@ class BeeMazeType(MazeType):
         self.playerClass = BeePlayer
         self.subfolder = "bee"
 
-    def setup(self, level, screen):
-        super().setup(level, screen)
+    def setup(self, level, maze):
+        super().setup(level, maze)
+        screen = maze.screen
         screen.bgpic(Maze.shapefile("background", ".png"))
         screen.register_shape(Maze.shapefile("cloud"))
         screen.register_shape(Maze.shapefile("path"))
@@ -80,6 +81,9 @@ class BeeCell(Cell):
         self.featureType = BeeFeatureType(featureType)
         self.flowerColor = FlowerColor(flowerColor)
         self.cloudType = CloudType(cloudType)
+
+    def is_variable_range(self):
+        return False
 
     def draw(self, x, y):
         if not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE):
@@ -173,3 +177,8 @@ class BeePlayer(Player):
         self._process(lambda cell: cell.isHive())
 
     at_hive = at_honeycomb
+
+    def _check(self):
+        if self.maze.maze_type.detect_win_scenario(self.maze):
+            self._success()
+        super()._check()

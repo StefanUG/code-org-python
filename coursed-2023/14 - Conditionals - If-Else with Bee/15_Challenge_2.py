@@ -18,6 +18,7 @@ bee.left()
 bee.get_nectar()
 bee.make_honey()
 while bee.nectar() > 0:
+    # Do this
 while bee.path_ahead():
     # Do this
 for i in range(???):

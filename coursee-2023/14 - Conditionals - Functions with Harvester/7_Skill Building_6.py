@@ -18,43 +18,43 @@ You can use them in your code:
 #
 # Actions
 
-player.forward()
-player.right()
-player.left()
-player.pick_corn()
-player.pick_pumpkin()
-player.pick_lettuce()
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.pick_corn()
+farmer.pick_pumpkin()
+farmer.pick_lettuce()
 
 #
 # Loops
 
-while not player.at_pumpkin():
+while not farmer.at_pumpkin():
     # Do this
-while player.has_corn():
+while farmer.has_corn():
     # Do this
-while player.path_ahead():
+while farmer.path_ahead():
     # Do this
 
 #
 # Conditionals
 
-if player.path_ahead():
+if farmer.path_ahead():
     # Do this
-if player.path_ahead():
-    # Do this
-else:
-    # Otherwise this
-if player.has_corn():
+if farmer.path_ahead():
     # Do this
 else:
     # Otherwise this
-if player.has_corn():
+if farmer.has_corn():
     # Do this
-while not player.at_pumpkin():
+else:
+    # Otherwise this
+if farmer.has_corn():
     # Do this
-while player.has_corn():
+while not farmer.at_pumpkin():
     # Do this
-while player.path_ahead():
+while farmer.has_corn():
+    # Do this
+while farmer.path_ahead():
     # Do this
 
 #

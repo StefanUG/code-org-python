@@ -19,7 +19,7 @@ You can use them in your code:
 farmer.forward()
 farmer.right()
 farmer.left()
-farmer.remove()
+farmer.remove() # limit: 1
 while farmer.at_pile():
     # Do this
 # 

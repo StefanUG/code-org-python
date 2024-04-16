@@ -19,50 +19,50 @@ You can use them in your code:
 #
 # Actions
 
-player.forward()
-player.right()
-player.left()
-player.pick_corn()
-player.pick_lettuce()
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.pick_corn()
+farmer.pick_lettuce()
 
 #
 # Loops
 
 for i in range(???):
     # Do this
-while not player.at_pumpkin():
+while not farmer.at_pumpkin():
     # Do this
-while player.has_corn():
+while farmer.has_corn():
     # Do this
-while player.has_lettuce():
+while farmer.has_lettuce():
     # Do this
-while player.path_ahead():
+while farmer.path_ahead():
     # Do this
 
 #
 # Conditionals
 
-if player.path_ahead():
+if farmer.path_ahead():
     # Do this
-if player.path_ahead():
-    # Do this
-else:
-    # Otherwise this
-if player.has_corn():
+if farmer.path_ahead():
     # Do this
 else:
     # Otherwise this
-if player.has_lettuce():
+if farmer.has_corn():
     # Do this
-if player.has_corn():
+else:
+    # Otherwise this
+if farmer.has_lettuce():
     # Do this
-while not player.has_lettuce():
+if farmer.has_corn():
     # Do this
-while player.has_corn():
+while not farmer.has_lettuce():
     # Do this
-while player.has_lettuce():
+while farmer.has_corn():
     # Do this
-while player.path_ahead():
+while farmer.has_lettuce():
+    # Do this
+while farmer.path_ahead():
     # Do this
 
 #

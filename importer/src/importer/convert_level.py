@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import json
 import argparse
 import os
+import shutil
 
 import jinja2
 
@@ -49,17 +50,21 @@ def extract_level_json(levelfile, root, target_dir):
 _DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 SKIN_PLAYER = {
+    # '[SKIN NAME]', ('[VARIABLE NAME IN PY]', '[CLASS NAME IN PY]')
     'pvz': ('zombie', 'ZombiePlayer'),
     'harvester': ('farmer', 'Harvester'),
     'farmer': ('farmer', 'Farmer'),
     'bee': ('bee', 'BeePlayer'),
-    'birds': ('bird', 'Bird')
+    'birds': ('bird', 'Bird'),
+    'collector': ('collector', 'Collector')
 }
 
 
 def create_maze_python(level_filename: str, level_key, course, lesson, level, level_xml):
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(_DIR_PATH))
     skin = level['config']['properties'].get('skin')
+
+    contained_levels = level['config']['properties'].get("contained_level_names")
 
     mapping = SKIN_PLAYER.get(skin)
     if mapping:
@@ -72,12 +77,15 @@ def create_maze_python(level_filename: str, level_key, course, lesson, level, le
     toolbox = generate_toolbox_python(level_xml, player)
     start_code = generate_python_from_blocks(level_xml.find("./blocks/start_blocks/xml"), player)
     solution_code = generate_python_from_blocks(level_xml.find("./blocks/solution_blocks/xml"), player)
+
+    # Create the level / puzzle file
     content = template.render(course=course, lesson=lesson, level=level, levelname=level_key, toolbox=toolbox,
                               player=player, player_type=player_type, start_code=start_code)
 
     with open(f"{level_filename}.py", mode="w", encoding="utf-8") as file:
         file.write(content)
 
+    # Create the solution / test file
     content = template.render(course=course, lesson=lesson, level=level, levelname=level_key, toolbox=toolbox,
                               player=player, player_type=player_type, start_code=solution_code)
 
@@ -87,6 +95,13 @@ def create_maze_python(level_filename: str, level_key, course, lesson, level, le
     with open(f"{filename}.py", mode="w", encoding="utf-8") as file:
         file.write(content)
 
+    # create a test_all.py file, if one does not exist
+    dirname = os.path.dirname(filename)
+    test_all_file = os.path.join(dirname, "test_all.py")
+    print("test all file", test_all_file, "exist?", os.path.exists(test_all_file))
+    if not os.path.exists(test_all_file):
+        print("Copy test_all.py to ", test_all_file)
+        shutil.copy(os.path.join(_DIR_PATH, "test_all.py"), test_all_file)
 
     print(f" -- wrote level to {level_filename}.py")
 
@@ -104,7 +119,7 @@ def handle_level(levelfile, leveltype, levels_dirname, level_filename, level_key
     :param level: the level json
     :return:
     """
-    print("HANDLE LEVEL: ", os.path.basename(levelfile), "type:", leveltype)
+    print("HANDLE LEVEL: ", os.path.basename(levelfile), "type:", leveltype, "target:", level_filename)
     os.makedirs(levels_dirname, exist_ok=True)
 
     # Load the level XML

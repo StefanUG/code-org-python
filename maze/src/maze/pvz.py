@@ -14,8 +14,9 @@ class ZombieMazeType(MazeType):
         self.playerClass = ZombiePlayer
         self.subfolder = "pvz"
 
-    def setup(self, level, screen):
-        super().setup(level, screen)
+    def setup(self, level, maze):
+        super().setup(level, maze)
+        screen = maze.screen
         screen.bgpic(Maze.shapefile("background"))
         screen.register_shape(Maze.shapefile("path"))
         screen.register_shape(Maze.shapefile("obstacle"))

@@ -244,7 +244,7 @@ class MazeType:
         return self.cellClass(**cell_dict)
 
     def path(self):
-        if self._path is None:
+        if self._path is None and self.pathClass:
             self._path = self.pathClass()
         return self._path
 
@@ -256,7 +256,7 @@ class MazeType:
         """
         return self._wall
 
-    def setup(self, level, screen):
+    def setup(self, level, maze):
         """
         Method is called before starting to render and setup the Maze
         """
@@ -293,8 +293,14 @@ class MazeType:
     def success(self, maze, player):
         player._success()
 
-    def failure(self, maze, player):
-        player._fail()
+    def failure(self, maze, player, reason=""):
+        player._fail(False, reason)
+
+    def detect_win_scenario(self, maze):
+        if all(element in maze.visited for element in maze.cells_to_visit):
+            value = maze.get_cell_values()
+            return value == 0
+        return False
 
 
 class Maze:
@@ -332,7 +338,7 @@ class Maze:
 
         self.pen = Pen()
 
-        maze_type.setup(level, self.screen)
+        maze_type.setup(level, self)
 
         self.screen.bgcolor("white")
         self.screen.setup(410, 410)  # TODO Add dynamic size
@@ -408,7 +414,8 @@ class Maze:
                 if cell.tileType.is_start():
                     self.startCell = cell
 
-        self.maze_type.path().hideturtle()
+        if self.maze_type.path():
+            self.maze_type.path().hideturtle()
         Cell.sort_list(self.cells_to_visit)
 
         self.player = self.maze_type.new_player(self)
@@ -436,21 +443,22 @@ class Maze:
         if self.detect_win_scenario():
             self._success()
         else:
-            self._fail()
+            self._fail("Win scenario not met")
 
     def _success(self):
         self.maze_type.success(self, self.player)
 
-    def _fail(self):
-        self.maze_type.failure(self, self.player)
+    def _fail(self, reason=""):
+        self.maze_type.failure(self, self.player, reason)
 
     def detect_win_scenario(self):
-        if all(element in self.visited for element in self.cells_to_visit):
-            value = self.get_cell_values()
-            return value == 0
-        return False
+        return self.maze_type.detect_win_scenario(self)
 
     def get_cell_values(self):
+        """
+        Returns the sum of the value of all the cells that were visited
+        :return:
+        """
         return functools.reduce(lambda v, cell: v + (cell.value if cell.value else 0), self.visited, 0)
 
     def get_cell(self, gridcoords: (int, int)) -> Cell:
@@ -520,20 +528,22 @@ class Player:
 
     def _check(self):
         if self.maze.is_wall(self.gridcoords()):
-            self._fail()
+            self._fail(True, "stepped into wall")
         if self._get_current_cell().is_obstacle():
-            self._fail()
+            self._fail(False, "stepped into obstacle")
 
         self.maze.update()
 
-    def _fail(self, undo=True):
-        print("fail")
+    def _fail(self, undo=True, reason=""):
+        print("fail", reason)
         if _TRACER_N > 0:
-            if (undo):
+            if undo:
                 self._turtle.undo()
             self._turtle.color("black", "red")
             self.maze.pen.draw_failure()
             self._turtle.getscreen().mainloop()
+        if _TESTMODE == "True":
+            sys.exit()
 
     def _success(self):
         print("success")
@@ -543,6 +553,8 @@ class Player:
             self._turtle.right(360)
             self._turtle.left(360)
             self._turtle.getscreen().mainloop()
+        if _TESTMODE == "True":
+            sys.exit()
 
     def _process(self, cond, deduct=1):
         color = self._turtle.color()
@@ -550,11 +562,11 @@ class Player:
         cell = self._get_current_cell()
         if cond(cell):
             if (deduct > 0 >= cell.value) or (deduct < 0 <= cell.value):
-                self._fail()
+                self._fail(False, "processed cell with wrong value")
             cell.value -= deduct
             cell.redraw()
         else:
-            self._fail()
+            self._fail(False, "wrong action used to process cell")
 
         self._turtle.color(color[0], color[1])
 
@@ -567,8 +579,12 @@ class Player:
 
     def forward(self, steps=1):
         for i in range(steps):
+            valid_move = self.path_ahead()
             self._turtle.forward(50)
-            self._check()
+            if not valid_move:
+                self._fail(undo=True, reason="no path ahead")
+            else:
+                self._check()
 
     def backward(self, steps=1):
         for i in range(steps):
