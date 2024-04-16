@@ -542,6 +542,8 @@ class Player:
             self._turtle.color("black", "red")
             self.maze.pen.draw_failure()
             self._turtle.getscreen().mainloop()
+        if _TESTMODE == "True":
+            sys.exit()
 
     def _success(self):
         print("success")
@@ -551,6 +553,8 @@ class Player:
             self._turtle.right(360)
             self._turtle.left(360)
             self._turtle.getscreen().mainloop()
+        if _TESTMODE == "True":
+            sys.exit()
 
     def _process(self, cond, deduct=1):
         color = self._turtle.color()
@@ -575,8 +579,12 @@ class Player:
 
     def forward(self, steps=1):
         for i in range(steps):
+            valid_move = self.path_ahead()
             self._turtle.forward(50)
-            self._check()
+            if not valid_move:
+                self._fail(undo=True, reason="no path ahead")
+            else:
+                self._check()
 
     def backward(self, steps=1):
         for i in range(steps):
