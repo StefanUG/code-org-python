@@ -82,6 +82,9 @@ class BeeCell(Cell):
         self.flowerColor = FlowerColor(flowerColor)
         self.cloudType = CloudType(cloudType)
 
+    def is_variable_range(self):
+        return False
+
     def draw(self, x, y):
         if not self.isCloud() and self.featureType in (BeeFeatureType.NONE, BeeFeatureType.VARIABLE):
             self.value = 0
@@ -174,3 +177,8 @@ class BeePlayer(Player):
         self._process(lambda cell: cell.isHive())
 
     at_hive = at_honeycomb
+
+    def _check(self):
+        if self.maze.maze_type.detect_win_scenario(self.maze):
+            self._success()
+        super()._check()
