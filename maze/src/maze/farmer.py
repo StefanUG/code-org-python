@@ -32,7 +32,7 @@ class FarmerMazeType(MazeType):
 
 class FarmerCell(Cell):
 
-    def __init__(self, tileType=0, value=0, range=0, featureType=0):
+    def __init__(self, tileType=0, value=0, range=0, featureType=0, possibleFeatures: list = None, startsHidden=False):
         super().__init__(tileType=tileType, value=value, range=range)
 
     def redraw(self):
