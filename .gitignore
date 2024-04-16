@@ -4,3 +4,6 @@ skins
 **/__pycache__
 **/*.pyx
 .idea/
+course*/**/test_*.py
+*/build/
+*/dist/
