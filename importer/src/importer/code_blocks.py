@@ -18,11 +18,19 @@ def sanitize_methodname(name):
 BLOCK_MAPPING = {
     # Generally applicable blocks
     "when_run": "# Start",
-    "controls_repeat": "for i in range({{field['TIMES']}}):\n{{statements['DO']}}",
+    "controls_repeat":      "for i in range({{field['TIMES']}}):\n{{statements['DO']}}",
+    "controls_repeat_ext":  "for i in range({{statements['TIMES']}}):\n{{statements['DO']}}",
+    "controls_for":         "for {{field['VAR']}} in range({{statements['FROM']}}, {{statements['TO']}}, {{statements['BY']}}):\n{{statements['DO']}}",
+    "math_arithmetic":  "{{statements['A']}}{{field['OP']}}{{statements['B']}}",
+    "math_number":      "{{field['NUM']}}",
+    "parameters_get":   "{{field['VAR']}}",
+    "variables_set":    "{{field['VAR']}} = {{statements['VALUE']}}",
+    "variables_get":    "{{field['VAR']}}",
+
     "comment": "# {{field['TEXT']}}",
 
-    "procedures_defnoreturn": "def {{ sanitize_methodname(field['NAME']) }}():\n{{statements['STACK']}}\n\n",
-    "procedures_callnoreturn": "{{ mutation['name'] }}()",
+    "procedures_defnoreturn": "def {{ sanitize_methodname(field['NAME']) }}({{mutation['args']}}):\n{{statements['STACK']}}\n\n",
+    "procedures_callnoreturn": "{{ mutation['name'] }}({{mutation['args']}})",
 
     # Generic Maze blocks
     "maze_untilBlockedOrNotClear": "while {{field['DIR']}}:\n{{statements['DO']}}",
@@ -61,6 +69,12 @@ BLOCK_MAPPING = {
 BLOCK_MAPPING["controls_repeat_dropdown"] = BLOCK_MAPPING['controls_repeat']
 
 FIELD_MAPPING = {
+    "math_arithmetic/ADD":      "+",
+    "math_arithmetic/MINUS":    "-",
+    "math_arithmetic/MULTIPLY": "*",
+    "math_arithmetic/DIVIDE":   "/",
+    "math_arithmetic/POWER":    "^",
+
     # Generic Maze blocks
     "maze_turn/turnRight":    "right()",
     "maze_turn/turnLeft":     "left()",
@@ -117,7 +131,7 @@ def map_field(block_type, text, player):
         template = J2_ENVIRONMENT.from_string(value)
         value = template.render(player=player)
     else:
-        if text == None:
+        if text is None:
             text = ""
         value = text
         print(f"     -- No FIELD_MAPPING found for key '{key}', using value from attribute '{value}'")
@@ -166,25 +180,64 @@ def generate_toolbox_python(root, player="player", skip_wording=False):
 
 
 def generate_python_from_blocks(blocks_element: ET.Element, player="player", indent=0) -> str:
-    definitions = []
+    when_run = None
     code = []
 
     if blocks_element:
         for block_element in blocks_element:
             block_type = block_element.attrib.get("type")
-            code.append(block_to_code(block_element, player))
-            if block_type in ("when_run", "procedures_defnoreturn"):
-                definitions.append(code.pop())
+            generated_code = block_to_code(block_element, player)
+            if block_type == "when_run":
+                # When Run needs to be the last thing to run,
+                # so we save it for last, so it can be inserted first - at the end.
+                # In Python the functions need to be defined before they can be called.
+                when_run = generated_code
+            elif block_type == "procedures_defnoreturn":
+                # When a function is defined, insert it first
+                code.insert(0, generated_code)
+            else:
+                code.append(generated_code)
 
-    if len(definitions) > 0:
-        definitions.reverse()
-        code = definitions
+    if when_run:
+        # At last, append the when_run element
+        code.append(when_run)
 
     code = "\n".join(code)
     if indent > 0:
         code = textwrap.indent(code, ' '*indent)
 
     return code
+
+
+def controls_for_workaround(statements):
+    start = statements.get("FROM")
+    if start is None:
+        start = 0
+    stop = statements.get("TO")
+    if stop is None:
+        stop = 1
+    else:
+        if "/" in stop:
+            stop = f"int({stop})"
+    step = statements.get("BY")
+    if step is None:
+        step = 1
+
+    try:
+        start = int(start)
+        stop = int(stop)
+        step = int(step)
+
+        if start > stop: # Counting down
+            step = step * -1
+
+        stop = stop + step
+    except ValueError:
+        stop = stop + "+1"
+
+
+    statements["TO"] = stop
+    statements["BY"] = step
 
 
 def block_to_code(block_element, player):
@@ -198,21 +251,70 @@ def block_to_code(block_element, player):
 
     for child in block_element:
         if child.tag in ["title", "field"]:
+            # When it is a literal value / field
             name = child.attrib.get("name")
             if name:
                 field[name] = map_field(block_type, child.text, player=player)
-        elif child.tag == "statement":
+        elif child.tag in ["statement", "value"]:
+            # When it is code that needs to be generated
             name = child.attrib.get("name")
             if name:
                 statements[name] = generate_python_from_blocks(child, player, 4)
+                if child.tag == "value":
+                    # When it's a value, it is used in a conditional and needs to be stripped
+                    statements[name] = statements[name].strip()
         elif child.tag == "mutation":
-            print("mutation")
             name = child.attrib.get("name")
             if name:
                 mutation['name'] = sanitize_methodname(name)
-            print("mutation", mutation)
+
+            args = []
+            for mute in child:
+                # E.g.
+                # <mutation>
+                #     <arg name="length"/>
+                # </mutation>
+                if mute.tag == "arg":
+                    args.append(mute.attrib.get("name"))
+            if len(args) > 0:
+                mutation['args'] = args
+
         elif child.tag == "next":
             next_elem = child
+
+    #
+    # METHOD DEF and CALL SECTION
+    #
+    # Preparing the arguments, either in the definition or the values to be passed
+
+    if mutation.get('name') and mutation.get('args'):
+        # Assume it is a method call that needs the value of the args passed
+        values = []
+        for i in range(len(mutation['args'])):
+            value = statements.get('ARG'+str(i))
+            if value is None:
+                value = "?"
+            values.append(f"{mutation['args'][i]}={value}")
+        mutation['args'] = ", ".join(values)
+    elif mutation.get('args'):
+        mutation['args'] = ", ".join(mutation['args'])
+    else:
+        mutation['args'] = ""
+
+    #
+    # WORKAROUND SECTION
+    #
+
+    if block_type == "controls_for":
+        # Workaround for counting down in range, not working like `range` is designed
+        controls_for_workaround(statements)
+    elif block_type == "controls_repeat_ext":
+        # workaround to the fact that a python division results in a float, which fails in `range`
+        times = statements.get("TIMES")
+        if times and "/" in times:
+            times = f"int({times})"
+            statements["TIMES"] = times
+
 
     codeline = map_block(block_type, field, player, statements, mutation)
 

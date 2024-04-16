@@ -168,14 +168,14 @@ def generate_courses(coursename, source_dir, target_dir):
 
                     lesson_name = lesson["name"]
 
+                    # Directory name for the lesson
+                    course_dirname = f"{args.target_dir}/{lesson_group['seeding_key']['script.name']}".lower()
+                    lesson_dirname = sanitize_filename(f"{lesson_seq} - {group_name} - {lesson_key}")
+                    lesson_dirname = f"{course_dirname}/{lesson_dirname}"
+                    levels_dirname = f"{lesson_dirname}/levels"
+
                     # Only continue if the lesson is under Creative Commons license
                     if cc_license:
-
-                        # Directory name for the lesson
-                        course_dirname = f"{args.target_dir}/{lesson_group['seeding_key']['script.name']}".lower()
-                        lesson_dirname = sanitize_filename(f"{lesson_seq} - {group_name} - {lesson_key}")
-                        lesson_dirname = f"{course_dirname}/{lesson_dirname}"
-                        levels_dirname = f"{lesson_dirname}/levels"
                         os.makedirs(lesson_dirname, exist_ok=True)
 
                         # TODO Make Lesson MD file for the lesson
@@ -213,16 +213,18 @@ def generate_courses(coursename, source_dir, target_dir):
                             section_pos = level["activity_section_position"]
 
                             if lesson_key == level["seeding_key"]["lesson.key"]:
+                                levelfile, leveltype = find_level_file(level_key, source_dir)
+
+                                if not levelfile:
+                                    print(f"No levefile foud for: {level_key}")
+                                    continue
+
                                 if level_progression:
                                     level_progression = sanitize_filename(level_progression)
                                     level_filename = f"{lesson_dirname}/{level_seq}_{level_progression}_{section_pos}"
                                 else:
-                                    level_filename = f"{lesson_dirname}/{level_seq}_{section_pos}"
-
-                                (levelfile, leveltype) = find_level_file(level_key, source_dir)
-                                if not levelfile:
-                                    print(f"No levefile foud for: {level_key}")
-                                    continue
+                                    predict = "_predict" if "predict" in levelfile else ""
+                                    level_filename = f"{lesson_dirname}/{level_seq}_{leveltype}{predict}"
 
                                 if leveltype == 'maze':
                                     convert_level.handle_level(levelfile, leveltype, levels_dirname, level_filename, level_key, course, lesson, level)
@@ -236,6 +238,11 @@ def generate_courses(coursename, source_dir, target_dir):
 
                     else:
                         print(f"Skipping lesson '{lesson_name}' as it does not have a creative_commons_license")
+
+                    if os.path.isdir(lesson_dirname) and not bool(os.listdir(lesson_dirname)):
+                        # If the directory exist and is empty after looping through all the levels, remove it
+                        os.rmdir(lesson_dirname)
+
 
 
 if __name__ == "__main__":
