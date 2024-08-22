@@ -35,6 +35,10 @@ BLOCK_MAPPING = {
     # Generic Maze blocks
     "maze_untilBlockedOrNotClear": "while {{field['DIR']}}:\n{{statements['DO']}}",
     "maze_moveForward":  "{{player}}.forward()",
+    "maze_moveEast":     "{{player}}.east()",
+    "maze_moveWest":     "{{player}}.west()",
+    "maze_moveNorth":    "{{player}}.north()",
+    "maze_moveSouth":    "{{player}}.south()",
     "maze_turn":         "{{player}}.{{field['DIR']}}",
     "maze_untilBlocked": "while {{player}}.path_ahead():\n{{statements['DO']}}",
     "maze_move":         "{{player}}.{{field['DIR']}}",
@@ -67,6 +71,10 @@ BLOCK_MAPPING = {
 }
 # Aliases
 BLOCK_MAPPING["controls_repeat_dropdown"] = BLOCK_MAPPING['controls_repeat']
+BLOCK_MAPPING["controls_repeat_simplified_dropdown"] = BLOCK_MAPPING['controls_repeat']
+BLOCK_MAPPING["controls_repeat_simplified"] = BLOCK_MAPPING['controls_repeat']
+BLOCK_MAPPING["collector_collect_simplified"] = BLOCK_MAPPING['collector_collect']
+
 
 FIELD_MAPPING = {
     "math_arithmetic/ADD":      "+",

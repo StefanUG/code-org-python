@@ -591,14 +591,35 @@ class Player:
             self._turtle.backward(50)
             self._check()
 
-    move_forward = forward
-    go_forward = forward
-
     def right(self):
         self._turtle.right(90)
 
     def left(self):
         self._turtle.left(90)
+
+    def east(self):
+        self._move_compass_direction(Direction.EAST)
+
+    def west(self):
+        self._move_compass_direction(Direction.WEST)
+
+    def north(self):
+        self._move_compass_direction(Direction.NORTH)
+
+    def south(self):
+        self._move_compass_direction(Direction.SOUTH)
+
+    def _move_compass_direction(self, direction:Direction):
+        self._turtle.setheading(direction.to_heading())
+        self.forward()
+
+    # Move Aliases
+    move_forward = forward
+    go_forward = forward
+    move_east = east
+    move_west = west
+    move_north = north
+    move_south = south
 
     def path_ahead(self):
         coords = self.gridcoords()
