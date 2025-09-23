@@ -7,3 +7,5 @@ skins
 course*/**/test_*.py
 */build/
 */dist/
+dist/
+build/
