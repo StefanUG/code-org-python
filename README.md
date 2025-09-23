@@ -13,10 +13,12 @@ Only lessons that code.org have released under Creative Commons license are impo
 # How to use it?
 
 1. Clone this repo
-2. Create a python environment, either with your IDE or with the command `python -m venv .venv`
-3. Install the maze module with pip `pip install -e maze`
-4. Open a challenge file and try it out, e.g. from the `coursed-2023/14 - Conditionals - If-Else with Bee`
-
+2. Check the version of python has the tkinter module installed: `python -m tkinter`. If it outputs an error, check a different version of python. E.g. `python3.13 -m tkinter`.
+3. Create a python environment with the right version, either with your IDE or with the command `python -m venv .venv`
+4. Activate the environment, e.g. `source .venv/bin/activate` on Mac/Linux or `.venv\Scripts\activate` on Windows.
+5. Install the maze module with pip `pip install -e .`
+6. Open a challenge file and try it out, e.g. from the `coursed-2024/14 - Conditionals - If-Else with Bee`
+7. Run the file, e.g. `python "coursed-2024/15 - Conditionals - If-Else with Bee/5_Skill Building_3.py"`
 
 
 
