@@ -29,13 +29,7 @@ for i in range(???):
 '''
 
 # When run
-bee.forward()
-bee.forward()
-bee.right()
-for i in range(2):
-    bee.forward()
-    if bee.at_flower():
-        bee.get_nectar()
+
 
 
 # Keep this
