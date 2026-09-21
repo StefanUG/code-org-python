@@ -1,14 +1,17 @@
 # What is this?
 
-This is a small python module that allows you solve some of the challenges from code.org in python.
+This repo contains Python puzzle files that let you solve some of the challenges from code.org.
 It is meant as a stepping stone from block programming to written code.
 
-Using the `importer` modules, the lessons and their levels can be imported from the code.org
-codebase and python files are generated accordingly, for students to start coding the solution.
 This is an example of what it looks like side-by-side with the "If/Else with Bee" lesson. On the left is code.org, and on the right is the same level, solved in python. And bottom right is the Turtle graphics window that shows the level.
 ![if else with bee, side by side](images/if-else-with-bee-side-by-side.png)
 
 Only lessons that code.org have released under Creative Commons license are imported and re-shared in this repo. Although with alternative artwork, as code.org holds exclusive rights to their own artwork.
+
+The puzzles are powered by the `maze` Turtle-graphics framework, published separately to PyPI as
+[`codingpirates-maze`](https://pypi.org/project/codingpirates-maze/) — see the
+[stefans-code-org-maze](https://github.com/StefanUG/stefans-code-org-maze) repo for its source, the
+code.org level importer, and how to publish new releases.
 
 # How to use it?
 
@@ -16,7 +19,7 @@ Only lessons that code.org have released under Creative Commons license are impo
 2. Check the version of python has the tkinter module installed: `python -m tkinter`. If it outputs an error, check a different version of python. E.g. `python3.13 -m tkinter`.
 3. Create a python environment with the right version, either with your IDE or with the command `python -m venv .venv`
 4. Activate the environment, e.g. `source .venv/bin/activate` on Mac/Linux or `.venv\Scripts\activate` on Windows.
-5. Install the maze module with pip `pip install -e .`
+5. Install the maze module with pip `pip install -r requirements.txt`
 6. Open a challenge file and try it out, e.g. from the `coursed-2024/14 - Conditionals - If-Else with Bee`
 7. Run the file, e.g. `python "coursed-2024/15 - Conditionals - If-Else with Bee/5_Skill Building_3.py"`
 

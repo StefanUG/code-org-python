@@ -1,12 +1,4 @@
-from/
-skins
-**/*.egg-info
 **/__pycache__
-**/*.pyx
 .idea/
-course*/**/test_*.py
-*/build/
-*/dist/
-dist/
-build/
-wip/
+.venv/
+.DS_Store
