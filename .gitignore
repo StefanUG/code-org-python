@@ -9,3 +9,4 @@ course*/**/test_*.py
 */dist/
 dist/
 build/
+wip/
