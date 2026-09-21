@@ -13,6 +13,8 @@ def run_script(dir, file):
 
 def visit_dir(dir):
     for file in os.listdir(dir):
+        if file.startswith("."):
+            continue
         fullpath = os.path.join(dir,file)
         if os.path.isdir(fullpath):
             visit_dir(fullpath)
