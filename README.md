@@ -10,7 +10,7 @@ Only lessons that code.org have released under Creative Commons license are impo
 
 The puzzles are powered by the `maze` Turtle-graphics framework, published separately to PyPI as
 [`codingpirates-maze`](https://pypi.org/project/codingpirates-maze/) — see the
-[stefans-code-org-maze](https://github.com/StefanUG/stefans-code-org-maze) repo for its source, the
+[codingpirates-maze](https://github.com/StefanUG/codingpirates-maze) repo for its source, the
 code.org level importer, and how to publish new releases.
 
 # How to use it?
