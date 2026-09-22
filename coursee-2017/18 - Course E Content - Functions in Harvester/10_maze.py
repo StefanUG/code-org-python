@@ -1,0 +1,74 @@
+from maze import Puzzle, Harvester
+
+maze = Puzzle.from_file("courseE_farmer_functions7b")
+farmer: Harvester = maze.player
+
+'''
+https://studio.code.org/s/coursee-2017/lessons/18/levels/10
+
+*"This harvest is a-MAZE-ing!"*
+
+Help the harvester find her way down this confusing path and to the pumpkin by turning **left** at the corn and **right** at the lettuce.  
+
+*(Don't forget to collect all of the produce along the way!)*
+
+---
+Here are elements from the toolbox.
+You can use them in your code:
+```
+
+#
+# Actions
+
+farmer.forward()
+farmer.right()
+farmer.left()
+farmer.pick_corn()
+farmer.pick_pumpkin()
+farmer.pick_lettuce()
+
+#
+# Loops
+
+while not farmer.at_pumpkin():
+    # Do this
+while farmer.has_corn():
+    # Do this
+while farmer.path_ahead():
+    # Do this
+
+#
+# Conditionals
+
+if farmer.path_ahead():
+    # Do this
+if farmer.path_ahead():
+    # Do this
+else:
+    # Otherwise this
+if farmer.has_corn():
+    # Do this
+else:
+    # Otherwise this
+if farmer.has_corn():
+    # Do this
+while not farmer.at_pumpkin():
+    # Do this
+while farmer.has_corn():
+    # Do this
+while farmer.path_ahead():
+    # Do this
+
+#
+# Functions
+
+
+```
+'''
+
+# When run
+
+
+
+# Keep this
+Puzzle.done()
